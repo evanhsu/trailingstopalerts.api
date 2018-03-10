@@ -1,0 +1,60 @@
+<?php
+
+use App\Domain\Stock;
+use Faker\Generator as Faker;
+
+$factory->define(Stock::class, function (Faker $faker) {
+    return [
+        'symbol' => $faker->randomElement([
+            'VNET',
+            'AGTK',
+            'BIDU',
+            'BCOR',
+            'WIFI',
+            'BRNW',
+            'CARB',
+            'JRJC',
+            'CHICF',
+            'CXDO',
+            'CRWG',
+            'EATR',
+            'EDXC',
+            'ENV',
+            'FB',
+            'FLPC',
+            'FZRO',
+            'GEGI0',
+            'GDDY',
+            'IAC ',
+            'IIJI9',
+            'IPAS',
+            'JCOM',
+            'LOGL',
+            'LLNW',
+            'MOMO',
+            'NTES',
+            'EGOV',
+            'NQ',
+            'OTOW',
+            'OPESY',
+            'PTOP',
+            'SIFY',
+            'SINA',
+            'SMCE',
+            'SOHU',
+            'FCCN',
+            'SNST',
+            'TCTZF',
+            'TCEHY',
+            'TMMI',
+            'TRON',
+            'TCX',
+            'TWTR',
+            'WEB',
+            'XNET',
+            'YAHOY',
+        ]),
+        'name' => $faker->company,
+        'price' => $faker->randomFloat(2, 0.10, 1000.00)
+    ];
+});

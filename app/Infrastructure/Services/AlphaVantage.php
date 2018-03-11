@@ -5,6 +5,7 @@ namespace App\Infrastructure\Services;
 use App\Domain\StockQuote;
 use GuzzleHttp\Client;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 
 class AlphaVantage
 {
@@ -35,7 +36,7 @@ class AlphaVantage
      * Takes an array of stock symbols OR a single stock symbol as a string.
      * Returns a Collection of StockQuote objects
      *
-     * @param array|string $symbols
+     * @param array|Collection|string $symbols
      * @return Collection
      * @throws \Exception
      */
@@ -47,6 +48,10 @@ class AlphaVantage
 
         if (gettype($symbols) == 'string') {
             $symbols = array($symbols);
+        }
+
+        if ($symbols instanceof Collection) {
+            $symbols = $symbols->all();
         }
 
         $function = 'BATCH_STOCK_QUOTES';

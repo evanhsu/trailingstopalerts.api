@@ -36,4 +36,12 @@ class StockQuote
         $this->timestamp = Carbon::parse($timestamp);
         return $this;
     }
+
+    public function toArray() {
+        return [
+            'symbol'    => $this->symbol,
+            'price'     => $this->price,
+            'timestamp' => $this->timestamp,
+        ];
+    }
 }

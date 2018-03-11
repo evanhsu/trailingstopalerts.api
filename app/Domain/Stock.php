@@ -1,10 +1,24 @@
 <?php
-
 namespace App\Domain;
-
-use Illuminate\Database\Eloquent\Model;
-
-class Stock extends Model
+/**
+ * App\Domain\Stock
+ *
+ * @property string $symbol
+ * @property string|null $name
+ * @property float $price
+ * @property \Carbon\Carbon $quote_updated_at
+ * @property \Carbon\Carbon|null $created_at
+ * @property \Carbon\Carbon|null $updated_at
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Domain\StopAlert[] $stopAlerts
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Domain\User[] $users
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Domain\Stock whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Domain\Stock whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Domain\Stock wherePrice($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Domain\Stock whereQuoteUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Domain\Stock whereSymbol($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Domain\Stock whereUpdatedAt($value)
+ */
+class Stock extends \Eloquent
 {
     protected $table = 'stocks';
     protected $primaryKey = 'symbol';
@@ -43,6 +57,9 @@ class Stock extends Model
         return $this->hasMany(StopAlert::class, 'symbol', 'symbol');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
     public function users() {
         return $this->belongsToMany(User::class, 'stop_alerts', 'symbol', 'user_id');
     }

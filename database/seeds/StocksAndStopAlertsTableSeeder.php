@@ -4,6 +4,7 @@ use App\Domain\StopAlert;
 use App\Domain\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class StocksAndStopAlertsTableSeeder extends Seeder
 {
@@ -32,6 +33,7 @@ class StocksAndStopAlertsTableSeeder extends Seeder
                         'trail_amount_units'    => 'percent',
                         'high_price'            => $stock->price * 1.08,
                         'high_price_updated_at' => new DateTime(),
+                        'trigger_price'         => $stock->price * 1.08 * 0.95,
                         'triggered'             => false,
                     ]);
                 });

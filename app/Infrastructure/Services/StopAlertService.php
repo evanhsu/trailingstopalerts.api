@@ -61,7 +61,16 @@ class StopAlertService
         $attributes['high_price'] = $stock->price;
         $attributes['high_price_updated_at'] = $stock->quote_updated_at;
 
-        return StopAlert::create($attributes);
+        $attributes['trigger_price'] = StopAlert::calculateTriggerPrice(
+            $attributes['high_price'],
+            $attributes['trail_amount'],
+            $attributes['trail_amount_units']
+        );
+
+        $stopAlert = StopAlert::create($attributes);
+        //event(StopAlertCreated, $stopAlert);
+
+        return $stopAlert;
     }
 
     /**
@@ -71,7 +80,10 @@ class StopAlertService
      */
     public function update($id, $attributes) {
         $stopAlert = $this->byIdOrFail($id);
+
         if($stopAlert->update($attributes)) {
+            $stopAlert->updateTriggerPrice();
+//            event(StopAlertUpdated, $stopAlert);
             return $stopAlert;
         }
 
@@ -87,10 +99,11 @@ class StopAlertService
         $stock = $stopAlert->stock;
 
         StopAlert::destroy($stopAlertId);
+//        event(StopAlertDestroyed, $stopAlertId);
 
         // Destroy the Stock as well, if there are no more StopAlerts using it.
         if($stock->stopAlerts()->count() === 0) {
-            Stock::destroy($stock);
+            Stock::destroy($stock); // TODO: handle this with a StockService, i.e. StockService $stocks->destroy($id) (which fires a StockDestroyed event)
         }
 
         return true;

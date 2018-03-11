@@ -23,6 +23,7 @@ class CreateStopAlertsTable extends Migration
             $table->decimal('high_price', 8, 2);
             $table->dateTime('high_price_updated_at');
 
+            $table->decimal('trigger_price', 8, 2);
             $table->boolean('triggered')->default(false);
             $table->timestamps();
 

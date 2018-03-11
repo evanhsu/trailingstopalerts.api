@@ -24,6 +24,19 @@ class Stock extends Model
     ];
 
     /**
+     * @var bool $FIRE_EVENTS   This value should be manually checked before firing any Model-based events
+     */
+    public static $FIRE_EVENTS = true;
+
+    /**
+     * @param bool $FIRE_EVENTS
+     */
+    public static function setFIREEVENTS($FIRE_EVENTS)
+    {
+        self::$FIRE_EVENTS = $FIRE_EVENTS;
+    }
+
+    /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function stopAlerts() {

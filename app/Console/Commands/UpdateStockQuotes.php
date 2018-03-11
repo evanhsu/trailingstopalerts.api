@@ -14,7 +14,8 @@ class UpdateStockQuotes extends Command
      *
      * @var string
      */
-    protected $signature = 'quotes:update';
+    protected $signature = 'quotes:update 
+                            {--no-triggers : Prevent events from firing during this update (StopAlerts will not be updated & no notifications will be sent)}';
 
     /**
      * The console command description.
@@ -46,19 +47,29 @@ class UpdateStockQuotes extends Command
      */
     public function handle()
     {
-        //
+        Log::info('Running UpdateStockQuotes command...');
+
         $groupedStocks = Stock::all()->pluck('symbol')->chunk(100);
         $quotes = collect([]);
 
         $groupedStocks->each(function($groupOfStocks) use (&$quotes) {
-            Log::debug('Sending batch quote request to AlphaVantage: '.$groupOfStocks);
             $quotes->push($this->client->batchQuote($groupOfStocks));
         });
+
+        if($this->option('no-triggers')) {
+            Stock::setFIREEVENTS(false);
+        }
 
         $quotes->flatten()->each(function($stockQuote) {
             $stock = Stock::find($stockQuote->symbol);
             $stock->update($stockQuote->toArray());
         });
+
+        if($this->option('no-triggers')) {
+            Stock::setFIREEVENTS(true);
+        }
+
+        Log::info('UpdateStockQuotes command completed: '.$quotes->flatten()->count().' quotes retrieved.');
 
         return true;
     }

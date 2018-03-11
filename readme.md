@@ -1,59 +1,75 @@
-<p align="center"><img src="https://laravel.com/assets/img/components/logo-laravel.svg"></p>
+# Trailing Stop Alerts API
+This repo contains the API for creating and triggering trailing stop alerts.
+Built on Laravel 5.6.
 
-<p align="center">
-<a href="https://travis-ci.org/laravel/framework"><img src="https://travis-ci.org/laravel/framework.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://poser.pugx.org/laravel/framework/d/total.svg" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://poser.pugx.org/laravel/framework/v/stable.svg" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://poser.pugx.org/laravel/framework/license.svg" alt="License"></a>
-</p>
+## Building the project
+Clone the project:
 
-## About Laravel
+    $ git clone https://github.com/evanhsu/trailingstopalerts.api.git
+    $ cd trailingstopalerts
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel attempts to take the pain out of development by easing common tasks used in the majority of web projects, such as:
+Install dependencies with Composer
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+    $ composer install
+    
+Add your AlphaVantage API key to `.env` (for retrieving stock prices)
 
-Laravel is accessible, yet powerful, providing tools needed for large, robust applications.
+Run database migrations
 
-## Learning Laravel
+    $ php artisan db:migrate
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of any modern web application framework, making it a breeze to get started learning the framework.
+Optionally, seed the database with test data
 
-If you're not in the mood to read, [Laracasts](https://laracasts.com) contains over 1100 video tutorials on a range of topics including Laravel, modern PHP, unit testing, JavaScript, and more. Boost the skill level of yourself and your entire team by digging into our comprehensive video library.
+    $php artisan db:seed
+    
+For a dev environment, you can now make requests to the API using the `client_secret`:
+`M3mI547k5W6eeIVXEPhnDsTPfNT8rdXC05UOpyVE` from your frontend.
 
-## Laravel Sponsors
+For a production environment, you need to generate a new OAuth client:
 
-We would like to extend our thanks to the following sponsors for helping fund on-going Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell):
+    $ php artisan tinker passport:client --password
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[British Software Development](https://www.britishsoftware.co)**
-- [Fragrantica](https://www.fragrantica.com)
-- [SOFTonSOFA](https://softonsofa.com/)
-- [User10](https://user10.com)
-- [Soumettre.fr](https://soumettre.fr/)
-- [CodeBrisk](https://codebrisk.com)
-- [1Forge](https://1forge.com)
-- [TECPRESSO](https://tecpresso.co.jp/)
-- [Pulse Storm](http://www.pulsestorm.net/)
-- [Runtime Converter](http://runtimeconverter.com/)
-- [WebL'Agence](https://weblagence.com/)
+That command will generate a `client_id` and `client_secret` that will need to
+accompany an authentication request sent from your frontend in order to be
+issued a Bearer Token.
 
-## Contributing
+    
+## Making Requests to the API
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+In general, each request must be have the following headers:
 
-## Security Vulnerabilities
+    Authorization: Bearer jf08234hfpq8w34hf...
+    Accept: Application/json
+    Content-Type: Application/json
+    
+The `Content-Type` header is only necessary on requests that have a BODY (post, patch).
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+The Bearer token is obtained by authenticating with a username/password via the `oauth/token` endpoint.
+This is an example using jQuery:
 
-## License
+    var settings = {
+      "async": true,
+      "crossDomain": true,
+      "url": "http://localhost/oauth/token",
+      "method": "POST",
+      "headers": {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Cache-Control": "no-cache",
+      },
+      "data": {
+        "grant_type": "password",
+        "client_id": "2",
+        "client_secret": "M3mI547k5W6eeIVXEPhnDsTPfNT8rdXC05UOpyVE",
+        "username": "myemail@example.com",
+        "password": "mypassword",
+        "scope": "*"
+      }
+    }
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+    $.ajax(settings).done(function (response) {
+      console.log(response);
+    });
+
+The `client_id` and `client_secret` in this example are pre-seeded into the database
+for development only.  You'll need to generate a new password grant client for use in
+production.

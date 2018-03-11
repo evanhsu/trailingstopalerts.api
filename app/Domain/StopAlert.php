@@ -94,7 +94,7 @@ class StopAlert extends \Eloquent
         $newTriggerPrice = self::calculateTriggerPrice($this->high_price, $this->trail_amount, $this->trail_amount_units);
 
         if($oldTriggerPrice !== $newTriggerPrice) {
-            $this->triggerPrice = $newTriggerPrice;
+            $this->trigger_price = $newTriggerPrice;
             $this->save();
         }
 

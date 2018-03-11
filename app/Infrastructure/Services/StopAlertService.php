@@ -80,10 +80,20 @@ class StopAlertService
 
     /**
      * @param $stopAlertId
-     * @return int
+     * @return boolean
      */
     public function destroy($stopAlertId) {
-        return StopAlert::destroy($stopAlertId);
+        $stopAlert = $this->byId($stopAlertId);
+        $stock = $stopAlert->stock;
+
+        StopAlert::destroy($stopAlertId);
+
+        // Destroy the Stock as well, if there are no more StopAlerts using it.
+        if($stock->stopAlerts()->count() === 0) {
+            Stock::destroy($stock);
+        }
+
+        return true;
     }
 
     /**

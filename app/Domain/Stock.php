@@ -27,7 +27,7 @@ class Stock extends Model
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function stopAlerts() {
-        return $this->hasMany(StopAlert::class);
+        return $this->hasMany(StopAlert::class, 'symbol', 'symbol');
     }
 
     public function users() {

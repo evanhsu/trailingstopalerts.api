@@ -10,11 +10,17 @@ class Stock extends Model
     protected $primaryKey = 'symbol';
     protected $keyType = 'string';
     public $incrementing = false;
+    protected $dates = [
+        'created_at',
+        'updated_at',
+        'quote_updated_at',
+    ];
 
     protected $fillable = [
         'symbol',
         'name',
         'price',
+        'quote_updated_at'
     ];
 
     /**

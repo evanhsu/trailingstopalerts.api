@@ -31,6 +31,7 @@ class StopAlertController extends Controller
     /**
      * @param Request $request
      * @return StopAlertResource
+     * @throws \Exception
      */
     public function store(Request $request)
     {

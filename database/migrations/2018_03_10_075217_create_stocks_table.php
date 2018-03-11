@@ -17,6 +17,7 @@ class CreateStocksTable extends Migration
             $table->string('symbol', 5);
             $table->string('name')->nullable();
             $table->decimal('price', 8, 2);
+            $table->dateTimeTz('quote_updated_at');
 
             $table->timestamps();
 

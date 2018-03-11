@@ -4,12 +4,25 @@ namespace App\Infrastructure\Services;
 use App\Domain\Stock;
 use App\Domain\StopAlert;
 use App\Domain\User;
-use DateTime;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 
 class StopAlertService
 {
+    /**
+     * @var AlphaVantage $client
+     */
+    protected $client;
+
+    /**
+     * StopAlertService constructor.
+     * @param AlphaVantage $alphaVantage
+     */
+    public function __construct(AlphaVantage $alphaVantage)
+    {
+        $this->client = $alphaVantage;
+    }
+
     /**
      * @param $id
      * @return mixed
@@ -29,14 +42,24 @@ class StopAlertService
     /**
      * @param $attributes
      * @return mixed
+     * @throws \Exception
      */
     public function create($attributes) {
-        if(is_null($stock = Stock::find($attributes['symbol']))) {
-            // TODO: create a new Stock with name & current price from the Alpha Vantage API
+        if(is_null($stock = Stock::find(strtoupper($attributes['symbol'])))) {
+            $quote = $this->client->batchQuote($attributes['symbol']);
+            if($quote->count() == 0) {
+                throw new UnprocessableEntityHttpException("The symbol '".$attributes['symbol']."' couldn't be found (is it on the NYSE?)");
+            }
+
+            $stock = Stock::create([
+                'symbol'            => $quote->first()->symbol,
+                'price'             => $quote->first()->price,
+                'quote_updated_at'  => $quote->first()->timestamp,
+            ]);
         }
 
         $attributes['high_price'] = $stock->price;
-        $attributes['high_price_updated_at'] = new DateTime();
+        $attributes['high_price_updated_at'] = $stock->quote_updated_at;
 
         return StopAlert::create($attributes);
     }

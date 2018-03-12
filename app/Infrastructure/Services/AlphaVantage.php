@@ -5,7 +5,6 @@ namespace App\Infrastructure\Services;
 use App\Domain\StockQuote;
 use GuzzleHttp\Client;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Log;
 
 class AlphaVantage
 {
@@ -30,6 +29,14 @@ class AlphaVantage
             'base_uri' => 'https://www.alphavantage.co/query/',
             'http_errors' => true,
         ]);
+    }
+
+    /**
+     * Change the Guzzle client used to make API calls (useful for passing in a Mock Guzzle client)
+     * @param Client $client
+     */
+    public function setHttpClient(Client $client) {
+        $this->client = $client;
     }
 
     /**

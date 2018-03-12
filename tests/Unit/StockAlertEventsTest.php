@@ -6,10 +6,8 @@ use App\Domain\User;
 use App\Infrastructure\Services\StopAlertService;
 use App\Domain\StockQuote;
 use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Facades\Auth;
 use Mockery;
 use Tests\TestCase;
-use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use \Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 

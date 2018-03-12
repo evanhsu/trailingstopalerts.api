@@ -2,6 +2,8 @@
 
 namespace Tests\Unit;
 
+use App\Domain\Stock;
+use App\Domain\StopAlert;
 use App\Domain\User;
 use App\Infrastructure\Services\StopAlertService;
 use App\Domain\StockQuote;
@@ -11,7 +13,7 @@ use Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use \Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 
-class StockAlertEventsTest extends TestCase
+class StopAlertServiceTest extends TestCase
 {
     use MockeryPHPUnitIntegration, RefreshDatabase;
     
@@ -19,28 +21,15 @@ class StockAlertEventsTest extends TestCase
      * @var StopAlertService $stopAlerts
      */
     public $stopAlerts;
+
+    /**
+     * @var User $user
+     */
+    public $user;
     
     public function setUp()
     {
         parent::setUp();
-
-//        $guzzleResponse = json_decode('
-//            {
-//                "Meta Data": {
-//                    "1. Information": "Batch Stock Market Quotes",
-//                    "2. Notes": "IEX Real-Time Price provided for free by IEX (https://iextrading.com/developer/).",
-//                    "3. Time Zone": "US/Eastern"
-//                },
-//                "Stock Quotes": [
-//                    {
-//                        "1. symbol": "FAKE",
-//                        "2. price": "96.1800",
-//                        "3. volume": "--",
-//                        "4. timestamp": "2018-03-09 16:01:30"
-//                    }
-//                ]
-//            }'
-//        );
 
         $alphaVantageResponse = collect([new StockQuote('FAKE', 96.18)]);
 
@@ -48,17 +37,19 @@ class StockAlertEventsTest extends TestCase
         $alphaVantage->shouldReceive('batchQuote')->andReturn($alphaVantageResponse);
         $this->stopAlerts = new StopAlertService($alphaVantage);
 
-        $user = new User([
+        $this->user = new User([
             'name'  => 'Test User',
             'email' => 'test@example.com',
             'password'  => '$2y$10$itSk/qVY/MF67KLtfgRenOlYY8oCB7wHZkeogK7y6/NMwvkCiyk/6', // 'password'
         ]);
-        $user->id = 9999;
-        $user->save();
-        $this->be($user); // Authenticate as this fake user
+        $this->user->id = 9999;
+        $this->user->save();
+        $this->be($this->user); // Authenticate as this fake user
     }
 
     private function createStopAlert() {
+        Event::fake();
+
         $stopAlertAttributes = [
             'user_id'           => 9999,
             'symbol'            => 'FAKE',
@@ -70,6 +61,8 @@ class StockAlertEventsTest extends TestCase
     }
 
     private function updateStopAlert($id) {
+        Event::fake();
+
         $stopAlertAttributes = [
             'symbol'             => 'FAKE',
             'trail_amount'       => 9.5,
@@ -80,23 +73,43 @@ class StockAlertEventsTest extends TestCase
     }
 
     private function destroyStopAlert($id) {
+        Event::fake();
+
         return $this->stopAlerts->destroy($id);
+    }
+
+    public function testCreateStopAlert()
+    {
+        $this->assertEquals(0, StopAlert::where('symbol', 'FAKE')->where('user_id', $this->user->id)->count());
+        $stopAlert = $this->createStopAlert();
+        $this->assertEquals(1, StopAlert::where('symbol', 'FAKE')->where('user_id', $this->user->id)->count());
     }
 
     public function testEventIsFiredWhenStopAlertIsCreated()
     {
-        Event::fake();
-
         $stopAlert = $this->createStopAlert();
         Event::assertDispatched(StopAlertCreated::class, function ($event) use ($stopAlert) {
             return $event->stopAlert->id == $stopAlert->id;
         });
     }
 
+    public function testStockIsCreatedWhenStopAlertIsCreatedForNewStockSymbol()
+    {
+        $this->assertEquals(0, Stock::where('symbol', 'FAKE')->count());
+        $stopAlert = $this->createStopAlert();
+        $this->assertEquals(1, Stock::where('symbol', 'FAKE')->count());
+    }
+
+
+    public function testUpdateStopAlert()
+    {
+        $stopAlert = $this->createStopAlert();
+        $stopAlert = $this->updateStopAlert($stopAlert->id);
+        $this->assertEquals(9.5, StopAlert::where('symbol', 'FAKE')->where('user_id', $this->user->id)->first()->trail_amount);
+    }
+
     public function testEventIsFiredWhenStopAlertIsUpdated()
     {
-        Event::fake();
-
         $stopAlert = $this->createStopAlert();
         $stopAlert = $this->updateStopAlert($stopAlert->id);
         Event::assertDispatched(StopAlertUpdated::class, function ($event) use ($stopAlert) {
@@ -104,10 +117,18 @@ class StockAlertEventsTest extends TestCase
         });
     }
 
+
+    public function testDeleteStopAlert()
+    {
+        $stopAlert = $this->createStopAlert();
+        $stopAlertId = $stopAlert->id;
+
+        $this->destroyStopAlert($stopAlert->id);
+        $this->assertEquals(0, StopAlert::where('symbol', 'FAKE')->where('user_id', $this->user->id)->count());
+    }
+
     public function testEventIsFiredWhenStopAlertIsDestroyed()
     {
-        Event::fake();
-
         $stopAlert = $this->createStopAlert();
         $stopAlertId = $stopAlert->id;
 

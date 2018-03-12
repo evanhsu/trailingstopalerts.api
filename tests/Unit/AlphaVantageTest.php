@@ -8,17 +8,13 @@ use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Response;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Log;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
-use Mockery;
 use Tests\TestCase;
-use Illuminate\Foundation\Testing\WithFaker;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use GuzzleHttp\Client;
 
 class AlphaVantageTest extends TestCase
 {
-    use MockeryPHPUnitIntegration, RefreshDatabase;
+    use MockeryPHPUnitIntegration;
 
     public $alphaVantage;
 
@@ -34,7 +30,8 @@ class AlphaVantageTest extends TestCase
      * Returns a 'pre-recorded' response when any request is sent out.
      * @return Client
      */
-    protected function getMockGuzzleClient() {
+    protected function getMockGuzzleClient()
+    {
         $status = 200;
         $headers = [
             'Connection' => 'keep-alive',
@@ -90,7 +87,7 @@ class AlphaVantageTest extends TestCase
 
         $this->assertTrue($quotes instanceof Collection, 'AlphaVantage must return a Collection');
         $this->assertTrue($quotes->first() instanceof StockQuote, 'AlphaVantage must return a Collection of StockQuote objects');
-        $this->assertTrue($quotes->where('symbol', 'MSFT')->first()->price == 96.18,'AlphaVantage returns MSFT quote with wrong price');
+        $this->assertTrue($quotes->where('symbol', 'MSFT')->first()->price == 96.18, 'AlphaVantage returns MSFT quote with wrong price');
         $this->assertTrue($quotes->where('symbol', 'FB')->first()->price == 185.23, 'AlphaVantage returns FB quote with wrong price');
     }
 }

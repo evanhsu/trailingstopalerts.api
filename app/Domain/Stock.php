@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Domain;
 /**
  * App\Domain\Stock
@@ -38,7 +39,7 @@ class Stock extends \Eloquent
     ];
 
     /**
-     * @var bool $FIRE_EVENTS   This value should be manually checked before firing any Model-based events
+     * @var bool $FIRE_EVENTS This value should be manually checked before firing any Model-based events
      */
     public static $FIRE_EVENTS = true;
 
@@ -53,14 +54,16 @@ class Stock extends \Eloquent
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function stopAlerts() {
+    public function stopAlerts()
+    {
         return $this->hasMany(StopAlert::class, 'symbol', 'symbol');
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
-    public function users() {
+    public function users()
+    {
         return $this->belongsToMany(User::class, 'stop_alerts', 'symbol', 'user_id');
     }
 }

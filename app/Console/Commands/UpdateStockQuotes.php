@@ -52,24 +52,24 @@ class UpdateStockQuotes extends Command
         $groupedStocks = Stock::all()->pluck('symbol')->chunk(100);
         $quotes = collect([]);
 
-        $groupedStocks->each(function($groupOfStocks) use (&$quotes) {
+        $groupedStocks->each(function ($groupOfStocks) use (&$quotes) {
             $quotes->push($this->client->batchQuote($groupOfStocks));
         });
 
-        if($this->option('no-triggers')) {
+        if ($this->option('no-triggers')) {
             Stock::setFIREEVENTS(false);
         }
 
-        $quotes->flatten()->each(function($stockQuote) {
+        $quotes->flatten()->each(function ($stockQuote) {
             $stock = Stock::find($stockQuote->symbol);
             $stock->update($stockQuote->toArray());
         });
 
-        if($this->option('no-triggers')) {
+        if ($this->option('no-triggers')) {
             Stock::setFIREEVENTS(true);
         }
 
-        Log::info('UpdateStockQuotes command completed: '.$quotes->flatten()->count().' quotes retrieved.');
+        Log::info('UpdateStockQuotes command completed: ' . $quotes->flatten()->count() . ' quotes retrieved.');
 
         return true;
     }

@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Domain;
 
 use Carbon\Carbon;
@@ -20,7 +21,7 @@ class StockQuote
     {
         $this->symbol = $symbol;
         $this->price = $price;
-        if(is_null($timestamp)) {
+        if (is_null($timestamp)) {
             $this->timestamp = Carbon::now();
         } else {
             $this->timestamp = Carbon::parse($timestamp, $timezone);
@@ -37,10 +38,11 @@ class StockQuote
         return $this;
     }
 
-    public function toArray() {
+    public function toArray()
+    {
         return [
-            'symbol'    => $this->symbol,
-            'price'     => $this->price,
+            'symbol' => $this->symbol,
+            'price' => $this->price,
             'timestamp' => $this->timestamp,
         ];
     }

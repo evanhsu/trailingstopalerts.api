@@ -22,7 +22,10 @@ class StockServiceTest extends TestCase
      */
     protected $alphaVantage;
     public $stockSymbol = 'FAKE';
-    public $stockPrice = 96.18;
+    public $stockPrice1 = 96.18;
+    public $stockTimestamp1;
+    public $stockPrice2 = 80.50;
+    public $stockTimestamp2;
 
     public function setUp()
     {
@@ -33,10 +36,13 @@ class StockServiceTest extends TestCase
 
     private function getValidStockServiceMock()
     {
-        $alphaVantageValidResponse = collect([new StockQuote($this->stockSymbol, $this->stockPrice)]);
+        $this->stockTimestamp1 = Carbon::now()->subDay();
+        $this->stockTimestamp2 = Carbon::now();
+        $alphaVantageValidResponse1 = collect([new StockQuote($this->stockSymbol, $this->stockPrice1, $this->stockTimestamp1)]);
+        $alphaVantageValidResponse2 = collect([new StockQuote($this->stockSymbol, $this->stockPrice2, $this->stockTimestamp2)]);
 
         $this->alphaVantage->shouldReceive('batchQuote')
-            ->andReturn($alphaVantageValidResponse, $alphaVantageValidResponse);
+            ->andReturn($alphaVantageValidResponse1, $alphaVantageValidResponse2); // 2 valid responses are queued up
 
         return new StockService($this->alphaVantage);
     }
@@ -57,20 +63,15 @@ class StockServiceTest extends TestCase
      */
     public function testCreateValidStock()
     {
-        $now = Carbon::now();
         $stocks = $this->getValidStockServiceMock();
 
-        $stock = $stocks->create([
-            'symbol' => $this->stockSymbol,
-            'price' => $this->stockPrice,
-            'quote_updated_at' => $now,
-        ]);
+        $stock = $stocks->create($this->stockSymbol);
 
 //        fwrite(STDERR, print_r($now), TRUE); // Echo to PHPUnit console
 
         $this->assertEquals(1, Stock::whereSymbol($this->stockSymbol)->count());
-        $this->assertEquals($this->stockPrice, Stock::whereSymbol($this->stockSymbol)->first()->price);
-        $this->assertTrue($now->diffInSeconds(Stock::whereSymbol($this->stockSymbol)->first()->quote_updated_at) < 1);
+        $this->assertEquals($this->stockPrice1, Stock::whereSymbol($this->stockSymbol)->first()->price);
+        $this->assertTrue($this->stockTimestamp1->diffInSeconds(Stock::whereSymbol($this->stockSymbol)->first()->quote_updated_at) < 1);
     }
 
     /**
@@ -80,15 +81,12 @@ class StockServiceTest extends TestCase
      */
     public function testCreateInvalidStock()
     {
+        $invalidSymbol = 'INVALID';
         $stocks = $this->getInvalidStockServiceMock();
 
-        $stock = $stocks->create([
-            'symbol' => 'INVALIDSYMBOL',
-            'price' => 5.25,
-            'quote_updated_at' => Carbon::now(),
-        ]);
+        $stock = $stocks->create($invalidSymbol);
 
-        $this->assertEquals(0, Stock::whereSymbol($this->stockSymbol)->count());
+        $this->assertEquals(0, Stock::whereSymbol($invalidSymbol)->count());
     }
 
     /**
@@ -97,26 +95,17 @@ class StockServiceTest extends TestCase
      */
     public function testStockServiceFirstOrCreate()
     {
-        $now = Carbon::now();
         $stocks = $this->getValidStockServiceMock();
 
-        $stocks->firstOrCreate($this->stockSymbol, [
-            'symbol' => $this->stockSymbol,
-            'price' => $this->stockPrice,
-            'quote_updated_at' => $now,
-        ]);
+        $stocks->firstOrCreate($this->stockSymbol);
 
         $this->assertEquals(1, Stock::whereSymbol($this->stockSymbol)->count());
-        $this->assertEquals($this->stockPrice, Stock::whereSymbol($this->stockSymbol)->first()->price);
+        $this->assertEquals($this->stockPrice1, Stock::whereSymbol($this->stockSymbol)->first()->price);
 
-        $stocks->firstOrCreate($this->stockSymbol, [
-            'symbol' => $this->stockSymbol,
-            'price' => $this->stockPrice + 10,
-            'quote_updated_at' => $now->subDay(),
-        ]);
+        $stocks->firstOrCreate($this->stockSymbol);
 
         $this->assertEquals(1, Stock::whereSymbol($this->stockSymbol)->count());
-        $this->assertEquals($this->stockPrice, Stock::whereSymbol($this->stockSymbol)->first()->price); // Assert price did NOT update
+        $this->assertEquals($this->stockPrice1, Stock::whereSymbol($this->stockSymbol)->first()->price); // Assert price did NOT update to 'stockPrice2'
     }
 
     /**
@@ -125,28 +114,21 @@ class StockServiceTest extends TestCase
      */
     public function testUpdateStock()
     {
-        $now = Carbon::now();
-        $yesterday = $now->subDay();
         $stocks = $this->getValidStockServiceMock();
 
-        $stock = $stocks->create([
-            'symbol' => $this->stockSymbol,
-            'price' => $this->stockPrice,
-            'quote_updated_at' => $yesterday,
-        ]);
+        $stock = $stocks->create($this->stockSymbol);
         $this->assertEquals(1, Stock::whereSymbol($this->stockSymbol)->count());
 
-        $newStockPrice = $this->stockPrice + 10;
         $stocks->update($this->stockSymbol, [
-            'price' => $newStockPrice,
-            'quote_updated_at' => $now,
+            'price' => $this->stockPrice2,
+            'quote_updated_at' => $this->stockTimestamp2,
         ]);
         $this->assertEquals(1, Stock::whereSymbol($this->stockSymbol)->count());
 
         $stock = Stock::whereSymbol($this->stockSymbol)->first();
 
-        $this->assertEquals($newStockPrice, $stock->price);
-        $this->assertTrue($now->diffInSeconds($stock->quote_updated_at) < 1);
+        $this->assertEquals($this->stockPrice2, $stock->price);
+        $this->assertTrue($this->stockTimestamp2->diffInSeconds($stock->quote_updated_at) < 1);
     }
 
     /**
@@ -158,8 +140,8 @@ class StockServiceTest extends TestCase
 
         Stock::create([
             'symbol' => $this->stockSymbol,
-            'price' => $this->stockPrice,
-            'quote_updated_at' => Carbon::now(),
+            'price' => $this->stockPrice1,
+            'quote_updated_at' => $this->stockTimestamp1,
         ]);
 
         $this->assertEquals(1, Stock::whereSymbol($this->stockSymbol)->count());
@@ -176,5 +158,22 @@ class StockServiceTest extends TestCase
 
         $this->assertEquals(0, Stock::whereSymbol($this->stockSymbol)->count());
         $stock = $stocks->bySymbolOrFail($this->stockSymbol); // Should throw exception
+    }
+
+    public function testDestroyStock()
+    {
+        $stocks = $this->getValidStockServiceMock();
+
+        $stock = $stocks->create($this->stockSymbol);
+
+        $this->assertEquals(1, Stock::whereSymbol($this->stockSymbol)->count());
+        $stocks->destroy($stock); // Destroy by passing in Object
+        $this->assertEquals(0, Stock::whereSymbol($this->stockSymbol)->count());
+
+        $stock = $stocks->create($this->stockSymbol);
+
+        $this->assertEquals(1, Stock::whereSymbol($this->stockSymbol)->count());
+        $stocks->destroy($stock->symbol); // Destroy by passing in a symbol
+        $this->assertEquals(0, Stock::whereSymbol($this->stockSymbol)->count());
     }
 }

@@ -35,7 +35,8 @@ class AlphaVantage
      * Change the Guzzle client used to make API calls (useful for passing in a Mock Guzzle client)
      * @param Client $client
      */
-    public function setHttpClient(Client $client) {
+    public function setHttpClient(Client $client)
+    {
         $this->client = $client;
     }
 
@@ -66,27 +67,27 @@ class AlphaVantage
 
         $response = $this->client->request('GET', '', [
             'query' => [
-                'function'  => $function,
-                'symbols'   => $symbolString,
-                'datatype'  => 'json',
-                'apikey'    => $this->apiKey,
+                'function' => $function,
+                'symbols' => $symbolString,
+                'datatype' => 'json',
+                'apikey' => $this->apiKey,
             ],
         ]);
 
-        if($response->getStatusCode() !== 200) {
+        if ($response->getStatusCode() !== 200) {
             throw new \Exception($response->getReasonPhrase() . ' - ' . $response->getBody());
         }
 
         $body = json_decode($response->getBody());
         $timezone = $body->{'Meta Data'}->{'3. Time Zone'};
         $quotes = collect($body->{'Stock Quotes'})
-            ->transform(function($quote) use ($timezone) {
+            ->transform(function ($quote) use ($timezone) {
                 return new StockQuote(
                     strtoupper($quote->{'1. symbol'}),
                     $quote->{'2. price'},
                     $quote->{'4. timestamp'},
                     $timezone
-                    );
+                );
             });
 
         return $quotes;

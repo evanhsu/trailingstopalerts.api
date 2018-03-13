@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Domain;
 
 use Illuminate\Database\Eloquent\Model;
@@ -62,10 +63,11 @@ class StopAlert extends Model
      * @param string $trailAmountUnits
      * @return bool|float
      */
-    public static function calculateTriggerPrice($highPrice, $trailAmount, $trailAmountUnits = 'percent') {
-        switch($trailAmountUnits) {
+    public static function calculateTriggerPrice($highPrice, $trailAmount, $trailAmountUnits = 'percent')
+    {
+        switch ($trailAmountUnits) {
             case 'percent':
-                return $highPrice * (100 - $trailAmount)/100.0;
+                return $highPrice * (100 - $trailAmount) / 100.0;
                 break;
             case 'dollars':
                 return $highPrice - $trailAmount;
@@ -78,14 +80,16 @@ class StopAlert extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function user() {
+    public function user()
+    {
         return $this->belongsTo(User::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function stock() {
+    public function stock()
+    {
         return $this->belongsTo(Stock::class, 'symbol', 'symbol');
     }
 
@@ -110,7 +114,8 @@ class StopAlert extends Model
      *
      * @return $this
      */
-    public function updateTriggerPrice() {
+    public function updateTriggerPrice()
+    {
         $this->trigger_price = self::calculateTriggerPrice($this->high_price, $this->trail_amount, $this->trail_amount_units);
 
         return $this;

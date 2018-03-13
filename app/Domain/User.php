@@ -31,11 +31,13 @@ class User extends Authenticatable
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function stopAlerts() {
+    public function stopAlerts()
+    {
         return $this->hasMany(StopAlert::class);
     }
 
-    public function stocks() {
+    public function stocks()
+    {
         return $this->belongsToMany(Stock::class, 'stop_alerts', 'user_id', 'symbol');
     }
 }

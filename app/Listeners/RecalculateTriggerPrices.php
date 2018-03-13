@@ -29,7 +29,6 @@ class RecalculateTriggerPrices
     {
         $stock = $event->stock;
 
-        // Find all affected StopAlerts
         $stock->stopAlerts->each(function ($stopAlert) use ($stock) {
 
             // Recalculate high_price, trigger_price, and triggered
@@ -37,6 +36,7 @@ class RecalculateTriggerPrices
                 $this->stopAlerts->update($stopAlert->id, [
                     'high_price' => $stock->price,
                     'high_price_updated_at' => $stock->quote_updated_at,
+                    // trigger_price is automatically updated
                 ]);
             }
 

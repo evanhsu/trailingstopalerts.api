@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Domain\Stock;
 use App\Infrastructure\Services\AlphaVantage;
+use App\Infrastructure\Services\StockService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 
@@ -15,7 +16,7 @@ class UpdateStockQuotes extends Command
      * @var string
      */
     protected $signature = 'quotes:update 
-                            {--no-triggers : Prevent events from firing during this update (StopAlerts will not be updated & no notifications will be sent)}';
+                            {--batch-size=100 : The number of quotes to retrieve from the AlphaVantage API in each request (max 100)}';
 
     /**
      * The console command description.
@@ -43,33 +44,26 @@ class UpdateStockQuotes extends Command
     /**
      * Execute the console command.
      *
+     * @param StockService $stocks
      * @return mixed
      */
-    public function handle()
+    public function handle(StockService $stocks)
     {
         Log::info('Running UpdateStockQuotes command...');
+        $startTime = microtime(true);
 
-        $groupedStocks = Stock::all()->pluck('symbol')->chunk(100);
         $quotes = collect([]);
-
-        $groupedStocks->each(function ($groupOfStocks) use (&$quotes) {
-            $quotes->push($this->client->batchQuote($groupOfStocks));
+        Stock::chunk($this->option('batch-size'), function($groupOfStocks) use (&$quotes) {
+            $quotes = $quotes->concat($this->client->batchQuote($groupOfStocks->pluck('symbol')));
         });
 
-        if ($this->option('no-triggers')) {
-            Stock::setFIREEVENTS(false);
-        }
-
-        $quotes->flatten()->each(function ($stockQuote) {
-            $stock = Stock::find($stockQuote->symbol);
-            $stock->update($stockQuote->toArray());
+        $quotes->each(function ($stockQuote) use (&$stocks) {
+            $stocks->update($stockQuote->symbol, $stockQuote->toArray());
         });
 
-        if ($this->option('no-triggers')) {
-            Stock::setFIREEVENTS(true);
-        }
-
-        Log::info('UpdateStockQuotes command completed: ' . $quotes->flatten()->count() . ' quotes retrieved.');
+        $duration = microtime(true) - $startTime;
+        $quotesCount = $quotes->count();
+        Log::info("UpdateStockQuotes command completed: $quotesCount quotes updated in $duration seconds.");
 
         return true;
     }

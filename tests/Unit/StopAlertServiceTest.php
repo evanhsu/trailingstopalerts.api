@@ -8,9 +8,8 @@ use App\Domain\User;
 use App\Infrastructure\Services\StockService;
 use App\Infrastructure\Services\StopAlertService;
 use App\Domain\StockQuote;
-use App\Jobs\NotifyUserAboutTriggeredAlert;
-use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Facades\Queue;
+use App\Notifications\UserStopAlertTriggered;
+use Illuminate\Support\Facades\Notification;
 use Mockery;
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -264,7 +263,7 @@ class StopAlertServiceTest extends TestCase
 
     public function testTrigger()
     {
-        Queue::fake();
+        Notification::fake();
 
         $stopAlerts = $this->getValidMock();
 
@@ -274,8 +273,12 @@ class StopAlertServiceTest extends TestCase
         $stopAlerts->trigger($stopAlert);
         $this->assertEquals(true, $stopAlert->fresh()->triggered);
 
-        Queue::assertPushed(NotifyUserAboutTriggeredAlert::class, function ($job) use ($stopAlert) {
-            return $job->stopAlert->id === $stopAlert->id;
-        });
+        Notification::assertSentTo(
+            $stopAlert->user,
+            UserStopAlertTriggered::class,
+            function ($notification, $channels) use ($stopAlert) {
+                return $notification->stopAlert->id === $stopAlert->id;
+            }
+        );
     }
 }

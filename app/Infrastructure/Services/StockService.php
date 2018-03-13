@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Infrastructure\Services;
 
 use App\Domain\Stock;
@@ -24,31 +25,35 @@ class StockService
     /**
      * Uniqueness enforced by db
      *
-     * @param array $attributes
+     * @param string $symbol
      * @return Stock
      * @throws \Exception|UnprocessableEntityHttpException
      */
-    public function create($attributes)
+    public function create(string $symbol)
     {
-        $quote = $this->client->batchQuote($attributes['symbol']);
-        if($quote->count() == 0) {
-            throw new UnprocessableEntityHttpException("The symbol '".$attributes['symbol']."' couldn't be found (is it on the NYSE?)");
+        $quote = $this->client->batchQuote($symbol);
+        if ($quote->count() == 0) {
+            throw new UnprocessableEntityHttpException("The symbol '$symbol' couldn't be found (is it on the NYSE?)");
         }
 
-        return Stock::create($attributes);
+        $stockQuote = $quote->first();
+        return Stock::create([
+            'symbol' => $stockQuote->symbol,
+            'price' => $stockQuote->price,
+            'quote_updated_at' => $stockQuote->timestamp,
+        ]);
     }
 
     /**
      * @param string $symbol
-     * @param array $attributes
      * @return Stock
      * @throws \Exception
      */
-    public function firstOrCreate(string $symbol, array $attributes)
+    public function firstOrCreate(string $symbol)
     {
         $stock = Stock::whereSymbol($symbol)->first();
-        if(null === $stock) {
-            $stock = $this->create($attributes);
+        if (null === $stock) {
+            $stock = $this->create($symbol);
         }
 
         return $stock;
@@ -63,7 +68,7 @@ class StockService
     {
         $stock = $this->bySymbolOrFail($symbol);
 
-        if($stock->update($attributes)) {
+        if ($stock->update($attributes)) {
 //            event(StockUpdated, $stock);
             return $stock;
         }
@@ -75,7 +80,8 @@ class StockService
      * @param string $symbol
      * @return Stock
      */
-    public function bySymbol($symbol) {
+    public function bySymbol($symbol)
+    {
         return Stock::where('symbol', 'like', $symbol)->first();
     }
 
@@ -83,11 +89,26 @@ class StockService
      * @param string $symbol
      * @return Stock
      */
-    public function bySymbolOrFail($symbol) {
-        if(is_null($stock = Stock::where('symbol', 'like', $symbol)->first())) {
+    public function bySymbolOrFail($symbol)
+    {
+        if (is_null($stock = Stock::where('symbol', 'like', $symbol)->first())) {
             throw new ModelNotFoundException;
         }
 
         return $stock;
+    }
+
+    /**
+     * @param $stock
+     * @return bool
+     */
+    public function destroy($stock)
+    {
+        if ($stock instanceof Stock) {
+            $stock->delete();
+        } else {
+            Stock::destroy($stock);
+        }
+        return true;
     }
 }

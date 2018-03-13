@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property int $user_id
  * @property float $trail_amount
  * @property string $trail_amount_units
+ * @property float $initial_price
  * @property float $high_price
  * @property \Carbon\Carbon $high_price_updated_at
  * @property float $trigger_price
@@ -42,6 +43,7 @@ class StopAlert extends Model
         'user_id',
         'trail_amount',
         'trail_amount_units',
+        'initial_price',
         'high_price',
         'high_price_updated_at',
         'trigger_price',
@@ -93,6 +95,11 @@ class StopAlert extends Model
         return $this->belongsTo(Stock::class, 'symbol', 'symbol');
     }
 
+    public function setInitialPriceAttribute($value)
+    {
+        $this->attributes['initial_price'] = (float)$value;
+    }
+
     public function setHighPriceAttribute($value)
     {
         $this->attributes['high_price'] = (float)$value;
@@ -119,5 +126,13 @@ class StopAlert extends Model
         $this->trigger_price = self::calculateTriggerPrice($this->high_price, $this->trail_amount, $this->trail_amount_units);
 
         return $this;
+    }
+
+    /**
+     * @return float
+     */
+    public function profit()
+    {
+        return $this->stock()->first()->price - $this->initial_price;
     }
 }

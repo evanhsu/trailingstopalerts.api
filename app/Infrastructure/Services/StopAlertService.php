@@ -2,10 +2,9 @@
 
 namespace App\Infrastructure\Services;
 
-use App\Domain\Stock;
 use App\Domain\StopAlert;
 use App\Domain\User;
-use App\Jobs\NotifyUserAboutTriggeredAlert;
+use App\Notifications\UserStopAlertTriggered;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 
@@ -51,6 +50,7 @@ class StopAlertService
     {
         $stock = $this->stocks->firstOrCreate($attributes['symbol']);
 
+        $attributes['initial_price'] = $stock->price;
         $attributes['high_price'] = $stock->price;
         $attributes['high_price_updated_at'] = $stock->quote_updated_at;
 
@@ -125,6 +125,19 @@ class StopAlertService
             'triggered' => true,
         ]);
 
-        return NotifyUserAboutTriggeredAlert::dispatch($stopAlert);
+        $stopAlert->user->notify(new UserStopAlertTriggered($stopAlert));
+        return $stopAlert;
+    }
+
+    /**
+     * @param StopAlert|int $stopAlert
+     * @return float
+     */
+    public function profit($stopAlert) {
+        if(!($stopAlert instanceof StopAlert)) {
+            $stopAlert = $this->byIdOrFail($stopAlert);
+        }
+
+        return $stopAlert->stock->price - $stopAlert->initial_price;
     }
 }

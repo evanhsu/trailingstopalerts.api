@@ -5,6 +5,7 @@ namespace App\Infrastructure\Services;
 use App\Domain\Stock;
 use App\Domain\StopAlert;
 use App\Domain\User;
+use App\Jobs\NotifyUserAboutTriggeredAlert;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 
@@ -69,7 +70,6 @@ class StopAlertService
         $stopAlert = $this->byIdOrFail($id);
 
         if ($stopAlert->update($attributes)) {
-//            $stopAlert->updateTriggerPrice();
 //            event(StopAlertUpdated, $stopAlert);
             return $stopAlert;
         }
@@ -108,5 +108,23 @@ class StopAlertService
         }
 
         return $stopAlert;
+    }
+
+    /**
+     * @param StopAlert|int $stopAlert
+     * @return mixed
+     */
+    public function trigger($stopAlert) {
+        if($stopAlert instanceof StopAlert) {
+            $id = $stopAlert->id;
+        } else {
+            $id = $stopAlert;
+        }
+
+        $stopAlert = $this->update($id, [
+            'triggered' => true,
+        ]);
+
+        return NotifyUserAboutTriggeredAlert::dispatch($stopAlert);
     }
 }

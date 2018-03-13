@@ -3,34 +3,46 @@
 namespace App\Listeners;
 
 use App\Events\StockUpdated;
+use App\Infrastructure\Services\StopAlertService;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 
 class RecalculateTriggerPrices
 {
     /**
-     * @var StockUpdated $event
+     * @var StopAlertService $stopAlerts
      */
-    public $event;
+    protected $stopAlerts;
 
-    /**
-     * @param StockUpdated $event
-     */
-    public function __construct(StockUpdated $event)
+    public function __construct(StopAlertService $stopAlerts)
     {
-        $this->event = $event;
+        $this->stopAlerts = $stopAlerts;
     }
 
     /**
      * Handle the event.
      *
-     * @param  object  $event
+     * @param StockUpdated $event
      * @return void
      */
-    public function handle($event)
+    public function handle(StockUpdated $event)
     {
+        $stock = $event->stock;
+
         // Find all affected StopAlerts
-        // Recalculate high_price, trigger_price, and triggered
-        // Dispatch job NotifyUserAboutTriggeredAlert for each triggered StopAlert
+        $stock->stopAlerts->each(function ($stopAlert) use ($stock) {
+
+            // Recalculate high_price, trigger_price, and triggered
+            if ($stock->price > $stopAlert->high_price) {
+                $this->stopAlerts->update($stopAlert->id, [
+                    'high_price' => $stock->price,
+                    'high_price_updated_at' => $stock->quote_updated_at,
+                ]);
+            }
+
+            if ($stock->price <= $stopAlert->trigger_price) {
+                $this->stopAlerts->trigger($stopAlert);
+            }
+        });
     }
 }

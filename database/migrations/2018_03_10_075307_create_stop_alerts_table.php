@@ -17,13 +17,13 @@ class CreateStopAlertsTable extends Migration
             $table->increments('id');
             $table->string('symbol', 5);
             $table->unsignedInteger('user_id');
-            $table->decimal('trail_amount', 8, 2);
+            $table->decimal('trail_amount', 9, 3);
             $table->string('trail_amount_units');
 
-            $table->decimal('high_price', 8, 2);
+            $table->decimal('high_price', 9, 3);
             $table->dateTime('high_price_updated_at');
 
-            $table->decimal('trigger_price', 8, 2);
+            $table->decimal('trigger_price', 9, 3);
             $table->boolean('triggered')->default(false);
             $table->timestamps();
 

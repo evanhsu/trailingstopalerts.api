@@ -1,5 +1,8 @@
 <?php
 namespace App\Domain;
+
+use Illuminate\Database\Eloquent\Model;
+
 /**
  * App\Domain\StopAlert
  *
@@ -28,7 +31,7 @@ namespace App\Domain;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Domain\StopAlert whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Domain\StopAlert whereUserId($value)
  */
-class StopAlert extends \Eloquent
+class StopAlert extends Model
 {
     /**
      * @var array
@@ -62,7 +65,7 @@ class StopAlert extends \Eloquent
     public static function calculateTriggerPrice($highPrice, $trailAmount, $trailAmountUnits = 'percent') {
         switch($trailAmountUnits) {
             case 'percent':
-                return $highPrice * (100 - $trailAmount);
+                return $highPrice * (100 - $trailAmount)/100.0;
                 break;
             case 'dollars':
                 return $highPrice - $trailAmount;
@@ -86,17 +89,29 @@ class StopAlert extends \Eloquent
         return $this->belongsTo(Stock::class, 'symbol', 'symbol');
     }
 
+    public function setHighPriceAttribute($value)
+    {
+        $this->attributes['high_price'] = (float)$value;
+    }
+
+    public function setTriggerPriceAttribute($value)
+    {
+        $this->attributes['trigger_price'] = (float)$value;
+    }
+
+    public function setTrailAmountAttribute($value)
+    {
+        $this->attributes['trail_amount'] = (float)$value;
+    }
+
     /**
+     * Sets the trigger_price attribute base on the $high_price and $trail_amount
+     * Note: this method does not SAVE the model!
+     *
      * @return $this
      */
     public function updateTriggerPrice() {
-        $oldTriggerPrice = $this->trigger_price;
-        $newTriggerPrice = self::calculateTriggerPrice($this->high_price, $this->trail_amount, $this->trail_amount_units);
-
-        if($oldTriggerPrice !== $newTriggerPrice) {
-            $this->trigger_price = $newTriggerPrice;
-            $this->save();
-        }
+        $this->trigger_price = self::calculateTriggerPrice($this->high_price, $this->trail_amount, $this->trail_amount_units);
 
         return $this;
     }

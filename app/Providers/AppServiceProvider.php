@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use App\Domain\StopAlert;
 use App\Infrastructure\Services\AlphaVantage;
+use App\Observers\StopAlertObserver;
 use Illuminate\Support\ServiceProvider;
 use Barryvdh\LaravelIdeHelper\IdeHelperServiceProvider;
 
@@ -24,6 +26,9 @@ class AppServiceProvider extends ServiceProvider
 
             return new AlphaVantage($apiKey);
         });
+
+        // Model Observers
+        StopAlert::observe(StopAlertObserver::class);
     }
 
     /**

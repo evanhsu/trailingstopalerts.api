@@ -66,6 +66,10 @@ class SeedOauthTables extends Migration
                 $this->db->update('ALTER SEQUENCE oauth_clients_id_seq RESTART WITH ' . ($this->clients->count() + 1) . ';');
                 break;
 
+            case 'sqlite':
+                // Don't worry about setting the auto_increment
+                break;
+
             default:
                 $this->db->update('ALTER TABLE oauth_clients AUTO_INCREMENT = ' . ($this->clients->count() + 1) . ';');
                 break;

@@ -27,7 +27,7 @@ For a dev environment, you can now make requests to the API using the `client_se
 
 For a production environment, you need to generate a new OAuth client:
 
-    $ php artisan tinker passport:client --password
+    $ php artisan passport:client --password
 
 That command will generate a `client_id` and `client_secret` that will need to
 accompany an authentication request sent from your frontend in order to be

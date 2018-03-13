@@ -3,6 +3,7 @@
 namespace App\Infrastructure\Services;
 
 use App\Domain\Stock;
+use App\Events\StockUpdated;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 
@@ -40,7 +41,7 @@ class StockService
         return Stock::create([
             'symbol' => $stockQuote->symbol,
             'price' => $stockQuote->price,
-            'quote_updated_at' => $stockQuote->timestamp,
+            'quote_updated_at' => $stockQuote->quote_updated_at,
         ]);
     }
 
@@ -66,10 +67,18 @@ class StockService
      */
     public function update(string $symbol, array $attributes)
     {
+        $fireEventOnUpdate = false;
         $stock = $this->bySymbolOrFail($symbol);
 
+        // Only fire a StockUpdated event if the price has changed
+        if ($attributes['price'] != $stock->price) {
+            $fireEventOnUpdate = true;
+        }
+
         if ($stock->update($attributes)) {
-//            event(StockUpdated, $stock);
+            if ($fireEventOnUpdate) {
+                event(new StockUpdated($stock));
+            }
             return $stock;
         }
 

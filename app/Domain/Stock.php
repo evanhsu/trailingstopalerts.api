@@ -1,6 +1,8 @@
 <?php
 
 namespace App\Domain;
+use Illuminate\Database\Eloquent\Model;
+
 /**
  * App\Domain\Stock
  *
@@ -19,7 +21,7 @@ namespace App\Domain;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Domain\Stock whereSymbol($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Domain\Stock whereUpdatedAt($value)
  */
-class Stock extends \Eloquent
+class Stock extends Model
 {
     protected $table = 'stocks';
     protected $primaryKey = 'symbol';

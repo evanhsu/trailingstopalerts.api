@@ -4,12 +4,12 @@ namespace Tests\Unit;
 
 use App\Domain\Stock;
 use App\Domain\StockQuote;
+use App\Events\StockUpdated;
 use App\Infrastructure\Services\StockService;
 use Carbon\Carbon;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\Event;
 use Mockery;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
-use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -114,6 +114,8 @@ class StockServiceTest extends TestCase
      */
     public function testUpdateStock()
     {
+        Event::fake(StockUpdated::class); // ONLY intercept this event type
+
         $stocks = $this->getValidStockServiceMock();
 
         $stock = $stocks->create($this->stockSymbol);
@@ -129,6 +131,10 @@ class StockServiceTest extends TestCase
 
         $this->assertEquals($this->stockPrice2, $stock->price);
         $this->assertTrue($this->stockTimestamp2->diffInSeconds($stock->quote_updated_at) < 1);
+
+        Event::assertDispatched(StockUpdated::class, function ($event) use ($stock) {
+            return $event->stock->symbol == $stock->symbol;
+        });
     }
 
     /**

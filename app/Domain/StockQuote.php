@@ -8,33 +8,33 @@ class StockQuote
 {
     public $symbol;
     public $price;
-    public $timestamp;
+    public $quote_updated_at;
 
     /**
      * StockQuote constructor.
      * @param string symbol
      * @param float $price
-     * @param string|null $timestamp
+     * @param string|null $quote_updated_at
      * @param string $timezone
      */
-    public function __construct($symbol, $price, $timestamp = null, $timezone = 'US/Eastern')
+    public function __construct($symbol, $price, $quote_updated_at = null, $timezone = 'US/Eastern')
     {
         $this->symbol = $symbol;
         $this->price = $price;
-        if (is_null($timestamp)) {
-            $this->timestamp = Carbon::now();
+        if (is_null($quote_updated_at)) {
+            $this->quote_updated_at = Carbon::now();
         } else {
-            $this->timestamp = Carbon::parse($timestamp, $timezone);
+            $this->quote_updated_at = Carbon::parse($quote_updated_at, $timezone);
         }
     }
 
     /**
-     * @param mixed $timestamp
+     * @param mixed $quote_updated_at
      * @return StockQuote
      */
-    public function setTimestamp($timestamp)
+    public function setTimestamp($quote_updated_at)
     {
-        $this->timestamp = Carbon::parse($timestamp);
+        $this->quote_updated_at = Carbon::parse($quote_updated_at);
         return $this;
     }
 
@@ -43,7 +43,7 @@ class StockQuote
         return [
             'symbol' => $this->symbol,
             'price' => $this->price,
-            'timestamp' => $this->timestamp,
+            'quote_updated_at' => $this->quote_updated_at,
         ];
     }
 }

@@ -53,12 +53,6 @@ class StopAlertService
         $attributes['high_price'] = $stock->price;
         $attributes['high_price_updated_at'] = $stock->quote_updated_at;
 
-//        $attributes['trigger_price'] = StopAlert::calculateTriggerPrice(
-//            $attributes['high_price'],
-//            $attributes['trail_amount'],
-//            $attributes['trail_amount_units']
-//        );
-
         $stopAlert = StopAlert::create($attributes);
         //event(StopAlertCreated, $stopAlert);
 

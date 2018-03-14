@@ -5,9 +5,16 @@ Built on Laravel 5.6.
 ## Building the project
 Clone the project:
 
-    $ git clone https://github.com/evanhsu/trailingstopalerts.api.git
-    $ cd trailingstopalerts
+    $ mkdir trailingstopalerts
+    $ git clone https://github.com/evanhsu/trailingstopalerts.api.git ./src
+    $ cd src
+    $ ./setup-laradock.sh
 
+The remaining commands should be run inside the Docker container.
+You can open a Bash shell by running:
+
+    $ ./docker-bash.sh
+     
 Install dependencies with Composer
 
     $ composer install
@@ -20,7 +27,7 @@ Run database migrations
 
 Optionally, seed the database with test data
 
-    $php artisan db:seed
+    $ php artisan db:seed
     
 For a dev environment, you can now make requests to the API using the `client_secret`:
 `M3mI547k5W6eeIVXEPhnDsTPfNT8rdXC05UOpyVE` from your frontend.
@@ -33,7 +40,10 @@ That command will generate a `client_id` and `client_secret` that will need to
 accompany an authentication request sent from your frontend in order to be
 issued a Bearer Token.
 
-    
+You should be able to visit the project in your browser now:
+**http://localhost**
+
+
 ## Making Requests to the API
 
 In general, each request must be have the following headers:

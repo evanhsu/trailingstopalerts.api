@@ -11,6 +11,8 @@
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
+// This route is a catch-all that will render the container-html for the React app, which then handles routing on the client side.
+Route::get('/{anything?}', function () {
+//    return view('welcome');
+    return view('app');
 });

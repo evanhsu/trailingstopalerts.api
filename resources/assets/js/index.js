@@ -1,9 +1,9 @@
 import React from 'react';
-import {render} from 'react-dom';
-import {createStore, applyMiddleware, compose} from 'redux';
-import {Provider} from 'react-redux';
+import { render } from 'react-dom';
+import { createStore, applyMiddleware, compose } from 'redux';
+import { Provider } from 'react-redux';
 import thunkMiddleware from 'redux-thunk';
-import {BrowserRouter as Router} from 'react-router-dom';
+import { BrowserRouter as Router } from 'react-router-dom';
 import Immutable from 'immutable';
 // import Perf from 'react-addons-perf';
 import rootReducer from './reducers';
@@ -26,6 +26,8 @@ const store = createStore(
     )
 );
 
+
+
 const renderApp = () => {
     if (document.querySelector('#root')) {
         render(
@@ -37,7 +39,7 @@ const renderApp = () => {
             document.querySelector('#root')
         );
     }
-};
+}
 
 renderApp(); // Mount the app to the DOM
 registerServiceWorker();

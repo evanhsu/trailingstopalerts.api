@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Domain\StopAlert;
 use App\Infrastructure\Services\AlphaVantage;
 use App\Observers\StopAlertObserver;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\ServiceProvider;
 use Barryvdh\LaravelIdeHelper\IdeHelperServiceProvider;
 
@@ -21,7 +22,8 @@ class AppServiceProvider extends ServiceProvider
             $apiKey = env('ALPHA_VANTAGE_API_KEY');
 
             if (empty($apiKey)) {
-                throw new \Exception('No API key provided for the AlphaVantage API');
+                Log::error('No API key provided for the AlphaVantage API');
+                return null;
             }
 
             return new AlphaVantage($apiKey);

@@ -8,7 +8,10 @@ use Illuminate\Database\Eloquent\Model;
  *
  * @property string $symbol
  * @property string|null $name
- * @property float $price
+ * @property float $open
+ * @property float $close
+ * @property float $high
+ * @property float $low
  * @property \Carbon\Carbon $quote_updated_at
  * @property \Carbon\Carbon|null $created_at
  * @property \Carbon\Carbon|null $updated_at
@@ -36,22 +39,12 @@ class Stock extends Model
     protected $fillable = [
         'symbol',
         'name',
-        'price',
-        'quote_updated_at'
+        'open',
+        'close',
+        'high',
+        'low',
+        'quote_updated_at',
     ];
-
-    /**
-     * @var bool $FIRE_EVENTS This value should be manually checked before firing any Model-based events
-     */
-    public static $FIRE_EVENTS = true;
-
-    /**
-     * @param bool $FIRE_EVENTS
-     */
-    public static function setFIREEVENTS($FIRE_EVENTS)
-    {
-        self::$FIRE_EVENTS = $FIRE_EVENTS;
-    }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
@@ -68,4 +61,25 @@ class Stock extends Model
     {
         return $this->belongsToMany(User::class, 'stop_alerts', 'symbol', 'user_id');
     }
+
+    public function setOpenAttribute($value)
+    {
+        $this->attributes['open'] = (float)$value;
+    }
+
+    public function setCloseAttribute($value)
+    {
+        $this->attributes['close'] = (float)$value;
+    }
+
+    public function setHighAttribute($value)
+    {
+        $this->attributes['high'] = (float)$value;
+    }
+
+    public function setLowAttribute($value)
+    {
+        $this->attributes['low'] = (float)$value;
+    }
 }
+

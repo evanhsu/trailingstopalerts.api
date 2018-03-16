@@ -2,9 +2,12 @@
 
 namespace App\Infrastructure\Services;
 
+use App\Domain\Stock;
 use App\Domain\StockQuote;
+use Carbon\Carbon;
 use GuzzleHttp\Client;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 
 class AlphaVantage
 {
@@ -92,4 +95,44 @@ class AlphaVantage
 
         return $quotes;
     }
+
+    public function dailyQuote($symbol, $outputSize = 'compact')
+    {
+        if (empty($symbol)) {
+            return null;
+        }
+
+        $function = 'TIME_SERIES_DAILY';
+
+        $response = $this->client->request('GET', '', [
+            'query' => [
+                'function' => $function,
+                'symbols' => $symbol,
+                'datatype' => 'json',
+                'output_size' => $outputSize,
+                'apikey' => $this->apiKey,
+            ],
+        ]);
+
+        if ($response->getStatusCode() !== 200) {
+            throw new \Exception($response->getReasonPhrase() . ' - ' . $response->getBody());
+        }
+
+        $body = json_decode($response->getBody());
+        $timezone = $body->{'Meta Data'}->{'5. Time Zone'};
+        $mostRecentQuoteDate = $body->{'Meta Data'}->{'3. Last Refreshed'};
+        $mostRecentQuote = $body->{'Time Series (Daily)'}->{$mostRecentQuoteDate};
+
+        $stock = new Stock([
+            'symbol' => strtoupper($symbol),
+            'open' => $mostRecentQuote->{'1. open'},
+            'high' => $mostRecentQuote->{'2. high'},
+            'low' => $mostRecentQuote->{'3. low'},
+            'close' => $mostRecentQuote->{'4. close'},
+            'quote_updated_at' => Carbon::parse($mostRecentQuoteDate),
+        ]);
+
+        return $stock;
+    }
 }
+

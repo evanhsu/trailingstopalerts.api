@@ -16,7 +16,10 @@ class CreateStocksTable extends Migration
         Schema::create('stocks', function (Blueprint $table) {
             $table->string('symbol', 5);
             $table->string('name')->nullable();
-            $table->decimal('price', 9, 3);
+            $table->decimal('open', 9, 3);
+            $table->decimal('close', 9, 3);
+            $table->decimal('high', 9, 3);
+            $table->decimal('low', 9, 3);
             $table->dateTimeTz('quote_updated_at');
 
             $table->timestamps();

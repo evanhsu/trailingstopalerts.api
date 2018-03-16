@@ -55,7 +55,10 @@ $factory->define(Stock::class, function (Faker $faker) {
             'YAHOY',
         ]),
         'name' => $faker->company,
-        'price' => $faker->randomFloat(2, 0.10, 1000.00),
+        'open' => $faker->randomFloat(2, 0.10, 1000.00),
+        'close' => $faker->randomFloat(2, 0.10, 1000.00),
+        'high' => $faker->randomFloat(2, 0.10, 1000.00),
+        'low' => $faker->randomFloat(2, 0.10, 1000.00),
         'quote_updated_at' => $faker->dateTimeBetween('-2 days', 'now'),
     ];
 });

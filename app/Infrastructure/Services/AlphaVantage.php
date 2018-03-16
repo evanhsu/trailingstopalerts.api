@@ -119,6 +119,11 @@ class AlphaVantage
         }
 
         $body = json_decode($response->getBody());
+
+        if(property_exists($body, "Error Message")) {
+            return null;
+        }
+
         $timezone = $body->{'Meta Data'}->{'5. Time Zone'};
         $mostRecentQuoteDate = $body->{'Meta Data'}->{'3. Last Refreshed'};
         $mostRecentQuote = $body->{'Time Series (Daily)'}->{$mostRecentQuoteDate};

@@ -1,7 +1,7 @@
 import {fromJS} from 'immutable';
 // import { StopAlert } from '../objectDefinitions/StopAlert';  // Immutable 'Record'
 
-export const fetchStopAlerts = () =>
+export const fetchStopAlerts = (token) =>
     // Requires the `redux-thunk` library for making asynchronous calls.
     function (dispatch) {
         dispatch(requestStopAlerts());
@@ -9,7 +9,8 @@ export const fetchStopAlerts = () =>
         return fetch('/api/alert', {
             credentials: 'same-origin',
             headers: {
-                'Accept': 'application/json',
+              'Accept': 'application/json',
+              'Authorization': `Bearer ${token}`,
             },
         })
             .then((response) => {

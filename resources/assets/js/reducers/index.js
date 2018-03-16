@@ -1,9 +1,9 @@
 import { combineReducers } from 'redux-immutable';
 import stopAlertsReducer from '../containers/StopAlertsManager/stopAlertsReducer';
-// import { authReducer as auth } from '../containers/Auth/authReducer';
+import authReducer from '../containers/AuthManager/reducer.js';
 
 const rootReducer = combineReducers({
-    // auth,
+    auth: authReducer,
     stopAlerts: stopAlertsReducer,
 });
 

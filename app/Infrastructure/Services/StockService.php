@@ -32,16 +32,18 @@ class StockService
      */
     public function create(string $symbol)
     {
-        $quote = $this->client->batchQuote($symbol);
-        if ($quote->count() == 0) {
+        $quote = $this->client->dailyQuote($symbol);
+        if(null === $quote) {
             throw new UnprocessableEntityHttpException("The symbol '$symbol' couldn't be found (is it on the NYSE?)");
         }
 
-        $stockQuote = $quote->first();
         return Stock::create([
-            'symbol' => $stockQuote->symbol,
-            'price' => $stockQuote->price,
-            'quote_updated_at' => $stockQuote->quote_updated_at,
+            'symbol' => $quote->symbol,
+            'open' => $quote->open,
+            'close' => $quote->close,
+            'high' => $quote->high,
+            'low' => $quote->low,
+            'quote_updated_at' => $quote->quote_updated_at,
         ]);
     }
 
@@ -67,23 +69,39 @@ class StockService
      */
     public function update(string $symbol, array $attributes)
     {
-        $fireEventOnUpdate = false;
         $stock = $this->bySymbolOrFail($symbol);
 
-        // Only fire a StockUpdated event if the price has changed
-        if ($attributes['price'] != $stock->price) {
-            $fireEventOnUpdate = true;
-        }
-
         if ($stock->update($attributes)) {
-            if ($fireEventOnUpdate) {
-                event(new StockUpdated($stock));
-            }
+            event(new StockUpdated($stock));
             return $stock;
         }
 
         throw new UnprocessableEntityHttpException("Couldn't update Stock: $symbol");
     }
+
+    /**
+     * @param string $symbol
+     * @param array $attributes
+     * @return Stock
+     * @throws \Exception
+     */
+    public function updateOrCreate(string $symbol, array $attributes = [])
+    {
+        $stock = $this->bySymbol($symbol);
+
+        if(null === $stock) {
+            $stock = $this->create($symbol);
+            return $stock;
+        }
+
+        if ($stock->update($attributes)) {
+            event(new StockUpdated($stock));
+            return $stock;
+        }
+
+        throw new UnprocessableEntityHttpException("Couldn't update Stock: $symbol");
+    }
+
 
     /**
      * @param string $symbol
@@ -110,6 +128,7 @@ class StockService
     /**
      * @param $stock
      * @return bool
+     * @throws \Exception
      */
     public function destroy($stock)
     {

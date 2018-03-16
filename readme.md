@@ -29,6 +29,10 @@ Optionally, seed the database with test data
 
     $ php artisan db:seed
     
+Generate your encryption keys for use with the Passport OAuth package:
+
+    $ php artisan passport:keys
+    
 For a dev environment, you can now make requests to the API using the `client_secret`:
 `M3mI547k5W6eeIVXEPhnDsTPfNT8rdXC05UOpyVE` from your frontend.
 

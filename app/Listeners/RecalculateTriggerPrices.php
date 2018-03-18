@@ -32,7 +32,7 @@ class RecalculateTriggerPrices
         $stock->stopAlerts->each(function ($stopAlert) use ($stock) {
 
             // Recalculate high_price, trigger_price, and triggered
-            if ($stock->price > $stopAlert->high_price) {
+            if ($stock->high > $stopAlert->high_price) {
                 $this->stopAlerts->update($stopAlert->id, [
                     'high_price' => $stock->price,
                     'high_price_updated_at' => $stock->quote_updated_at,
@@ -40,7 +40,7 @@ class RecalculateTriggerPrices
                 ]);
             }
 
-            if ($stock->price <= $stopAlert->trigger_price) {
+            if ($stock->close <= $stopAlert->trigger_price) {
                 $this->stopAlerts->trigger($stopAlert);
             }
         });

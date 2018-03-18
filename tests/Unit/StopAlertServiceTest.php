@@ -5,12 +5,13 @@ namespace Tests\Unit;
 use App\Domain\Stock;
 use App\Domain\StopAlert;
 use App\Domain\User;
-use App\Infrastructure\Services\StockService;
 use App\Infrastructure\Services\StopAlertService;
-use App\Domain\StockQuote;
 use App\Notifications\UserStopAlertTriggered;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Mockery;
+use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use \Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
@@ -24,13 +25,14 @@ class StopAlertServiceTest extends TestCase
      */
     public $user;
 
-    public $stockSymbol = 'FAKE';
-    public $stockSymbol2 = 'WRONG';
-    public $stockPrice = 96.18;
-    public $trailAmountOnCreate = 5.0;
-    public $trailAmountOnUpdate = 9.5;
-    public $triggerPriceOnCreate;
-    public $triggerPriceOnUpdate;
+    public $stock1quote1;
+    public $stock1quote2;
+
+    public $stopAlertInitial;
+    public $stopAlertUpdated;
+
+    public $stopAlertInitialTriggerPrice;
+    public $stopAlertUpdatedTriggerPrice;
 
     public function setUp()
     {
@@ -38,81 +40,78 @@ class StopAlertServiceTest extends TestCase
 
         $this->user = new User([
             'name' => 'Test User',
-            'email' => 'test@example.com',
+            'email' => 'testuser@example.com',
             'password' => '$2y$10$itSk/qVY/MF67KLtfgRenOlYY8oCB7wHZkeogK7y6/NMwvkCiyk/6', // 'password'
         ]);
         $this->user->id = 9999;
         $this->user->save();
         $this->be($this->user); // Authenticate as this fake user
 
-        $this->triggerPriceOnCreate = $this->stockPrice * (100 - $this->trailAmountOnCreate) / 100.0;
-        $this->triggerPriceOnUpdate = $this->stockPrice * (100 - $this->trailAmountOnUpdate) / 100.0;
+        $this->stock1quote1 = new Stock([
+            'symbol' => 'MSFT',
+            'open' => 100.00,
+            'close' => 91.00,
+            'high' => 101.25,
+            'low' => 90.50,
+            'quote_updated_at' => Carbon::parse('yesterday'),
+        ]);
+
+        $this->stopAlertInitial = [
+            'symbol' => 'MSFT',
+            'initial_price' => 100.10,
+            'purchase_date' => Carbon::today(),
+            'trail_amount' => 5.0,
+            'trail_amount_units' => 'percent',
+        ];
+        $this->stopAlertInitialTriggerPrice = $this->stopAlertInitial['initial_price'] * (100 - 5.0) / 100.0; // 95.095
+
+        $this->stopAlertUpdated = [
+            'symbol' => 'MSFT',
+            'trail_amount' => 9.5,
+            'trail_amount_units' => 'percent',
+        ];
+        $this->stopAlertUpdatedTriggerPrice = $this->stopAlertInitial['initial_price'] * (100 - 9.5) / 100.0;
+//        $this->stopAlertUpdatedTriggerPrice = $this->stock1quote1['high'] * (100 - 9.5) / 100.0; // 86.9705
     }
 
-    private function getValidMock($symbol = null, $price = null)
+    private function getValidMock(string $methodName = 'firstOrCreate', $stockToReturn = null)
     {
-        if (is_null($symbol)) {
-            $symbol = $this->stockSymbol;
-        }
-        if (is_null($price)) {
-            $price = $this->stockPrice;
-        }
-        $validAlphaVantageResponse = collect([new StockQuote($symbol, $price)]);
+        $stockService = Mockery::mock('App\Infrastructure\Services\StockService');
+        $stockService->shouldReceive($methodName)->andReturn($stockToReturn);
 
-        $alphaVantage = Mockery::mock('App\Infrastructure\Services\AlphaVantage');
-        $alphaVantage->shouldReceive('batchQuote')->andReturn($validAlphaVantageResponse);
-
-        $stockService = new StockService($alphaVantage);
         return new StopAlertService($stockService);
     }
 
-    private function getInvalidMock()
+    private function getInvalidMock($methodName)
     {
-        $invalidAlphaVantageResponse = collect([]); // Returns empty collection when invalid symbol is queried
+        $invalidResponse = null; // Returns null when invalid symbol is queried
 
-        $alphaVantage = Mockery::mock('App\Infrastructure\Services\AlphaVantage');
-        $alphaVantage->shouldReceive('batchQuote')->andReturn($invalidAlphaVantageResponse);
+        $stockService = Mockery::mock('App\Infrastructure\Services\StockService');
+        $stockService->shouldReceive($methodName)->andReturnUsing(function() {
+            throw new UnprocessableEntityHttpException();
+        });
 
-        $stockService = new StockService($alphaVantage);
         return new StopAlertService($stockService);
     }
 
     private function createValidStopAlert()
     {
-        $stopAlerts = $this->getValidMock($this->stockSymbol, $this->stockPrice);
+        $stopAlerts = $this->getValidMock('firstOrCreate', $this->stock1quote1);
 
-        $stopAlertAttributes = [
-            'user_id' => $this->user->id,
-            'symbol' => $this->stockSymbol,
-            'trail_amount' => $this->trailAmountOnCreate,
-            'trail_amount_units' => 'percent',
-        ];
-
-        return $stopAlerts->create($stopAlertAttributes);
-    }
-
-    private function createAnotherValidStopAlert()
-    {
-        $stopAlerts = $this->getValidMock($this->stockSymbol2, $this->stockPrice);
-
-        $stopAlertAttributes = [
-            'user_id' => $this->user->id,
-            'symbol' => $this->stockSymbol2,
-            'trail_amount' => $this->trailAmountOnCreate,
-            'trail_amount_units' => 'percent',
-        ];
+        $stopAlertAttributes = array_merge(['user_id' => $this->user->id], $this->stopAlertInitial);
 
         return $stopAlerts->create($stopAlertAttributes);
     }
 
     private function createInvalidStopAlert()
     {
-        $stopAlerts = $this->getinvalidMock();
+        $stopAlerts = $this->getinvalidMock('firstOrCreate');
 
         $stopAlertAttributes = [
             'user_id' => $this->user->id,
-            'symbol' => $this->stockSymbol,
-            'trail_amount' => $this->trailAmountOnCreate,
+            'symbol' => 'FAKE',
+            'initial_price' => 100.00,
+            'trail_amount' => 5.0,
             'trail_amount_units' => 'percent',
         ];
 
@@ -121,34 +120,36 @@ class StopAlertServiceTest extends TestCase
 
     private function updateStopAlert($id)
     {
-        $stopAlerts = $this->getValidMock($this->stockSymbol, $this->stockPrice);
+        $stopAlerts = $this->getValidMock();
 
-        $stopAlertAttributes = [
-            'symbol' => $this->stockSymbol,
-            'trail_amount' => $this->trailAmountOnUpdate,
-            'trail_amount_units' => 'percent',
-        ];
+        $stopAlertAttributes = array_merge(['user_id' => $this->user->id], $this->stopAlertUpdated);
 
         return $stopAlerts->update($id, $stopAlertAttributes);
     }
 
     private function destroyStopAlert($id)
     {
-        $stopAlerts = $this->getValidMock();
+        $stopAlerts = $this->getValidMock('byStopAlert', $this->stock1quote1);
 
         return $stopAlerts->destroy($id);
     }
 
     public function testCreateValidStopAlert()
     {
-        $this->assertEquals(0, StopAlert::where('symbol', $this->stockSymbol)->where('user_id', $this->user->id)->count());
-        $stopAlert = $this->createValidStopAlert();
-        $this->assertEquals(1, StopAlert::where('symbol', $this->stockSymbol)->where('user_id', $this->user->id)->count());
+        $this->assertEquals(0, StopAlert::where('symbol', $this->stock1quote1->symbol)
+            ->where('user_id', $this->user->id)
+            ->count()
+        );
+        $this->createValidStopAlert();
+        $this->assertEquals(1, StopAlert::where('symbol', $this->stock1quote1->symbol)
+            ->where('user_id', $this->user->id)
+            ->count()
+        );
 
-        $stopAlert = StopAlert::where('symbol', $this->stockSymbol)->where('user_id', $this->user->id)->first();
-        $this->assertEquals(round($this->trailAmountOnCreate, 3), round($stopAlert->trail_amount, 3));
+        $stopAlert = StopAlert::where('symbol', $this->stock1quote1->symbol)->where('user_id', $this->user->id)->first();
+        $this->assertEquals(round($this->stopAlertInitial['trail_amount'], 3), round($stopAlert->trail_amount, 3));
         $this->assertEquals('percent', $stopAlert->trail_amount_units);
-        $this->assertEquals(round($this->triggerPriceOnCreate, 3), round($stopAlert->trigger_price, 3));
+        $this->assertEquals(round($this->stopAlertInitialTriggerPrice, 3), round($stopAlert->trigger_price, 3));
     }
 
     /**
@@ -156,9 +157,15 @@ class StopAlertServiceTest extends TestCase
      */
     public function testCreateInvalidStopAlert()
     {
-        $this->assertEquals(0, StopAlert::where('symbol', $this->stockSymbol)->where('user_id', $this->user->id)->count());
-        $stopAlert = $this->createInvalidStopAlert();
-        $this->assertEquals(0, StopAlert::where('symbol', $this->stockSymbol)->where('user_id', $this->user->id)->count());
+        $this->assertEquals(0, StopAlert::where('symbol', $this->stock1quote1->symbol)
+            ->where('user_id', $this->user->id)
+            ->count()
+        );
+        $this->createInvalidStopAlert();
+        $this->assertEquals(0, StopAlert::where('symbol', $this->stock1quote1->symbol)
+            ->where('user_id', $this->user->id)
+            ->count()
+        );
     }
 
 //    public function testEventIsFiredWhenStopAlertIsCreated()
@@ -169,12 +176,12 @@ class StopAlertServiceTest extends TestCase
 //        });
 //    }
 
-    public function testStockIsCreatedWhenStopAlertIsCreatedForNewStockSymbol()
-    {
-        $this->assertEquals(0, Stock::where('symbol', $this->stockSymbol)->count());
-        $stopAlert = $this->createValidStopAlert();
-        $this->assertEquals(1, Stock::where('symbol', $this->stockSymbol)->count());
-    }
+//    public function testStockIsCreatedWhenStopAlertIsCreatedForNewStockSymbol()
+//    {
+//        // This can't be tested using a Mock StockService...
+//        $this->assertEquals(0, Stock::where('symbol', $this->stock1quote1->symbol)->count());
+//        $this->assertEquals(1, Stock::where('symbol', $this->stock1quote1->symbol)->count());
+//    }
 
 
     public function testUpdateValidStopAlert()
@@ -182,11 +189,11 @@ class StopAlertServiceTest extends TestCase
         $stopAlert = $this->createValidStopAlert();
         $this->updateStopAlert($stopAlert->id);
 
-        $stopAlert = StopAlert::where('symbol', $this->stockSymbol)->where('user_id', $this->user->id)->first();
+        $stopAlert = StopAlert::where('symbol', $this->stock1quote1->symbol)->where('user_id', $this->user->id)->first();
 
-        $this->assertEquals(round($this->trailAmountOnUpdate, 3), round($stopAlert->trail_amount, 3));
+        $this->assertEquals(round($this->stopAlertUpdated['trail_amount'], 3), round($stopAlert->trail_amount, 3));
         $this->assertEquals('percent', $stopAlert->trail_amount_units);
-        $this->assertEquals(round($this->triggerPriceOnUpdate, 3), round($stopAlert->trigger_price, 3));
+        $this->assertEquals(round($this->stopAlertUpdatedTriggerPrice, 3), round($stopAlert->trigger_price, 3));
     }
 
     /**
@@ -210,23 +217,16 @@ class StopAlertServiceTest extends TestCase
 
     public function testDeleteStopAlert()
     {
-        $stopAlert = $this->createValidStopAlert();
-        $stopAlertId = $stopAlert->id;
+        $stopAlert1 = $this->createValidStopAlert();
+        $stopAlert2 = $this->createValidStopAlert();
 
-        $this->destroyStopAlert($stopAlert->id);
-        $this->assertEquals(0, StopAlert::where('symbol', $this->stockSymbol)->where('user_id', $this->user->id)->count());
+        $this->destroyStopAlert($stopAlert1->id);
+
+        $this->assertEquals(1, StopAlert::where('symbol', $this->stock1quote1->symbol)
+            ->where('user_id', $this->user->id)
+            ->count()
+        );
     }
-
-//    public function testEventIsFiredWhenStopAlertIsDestroyed()
-//    {
-//        $stopAlert = $this->createValidStopAlert();
-//        $stopAlertId = $stopAlert->id;
-//
-//        $this->destroyStopAlert($stopAlert->id);
-//        Event::assertDispatched(StopAlertDestroyed::class, function ($event) use ($stopAlertId) {
-//            return $event->stopAlertId == $stopAlertId;
-//        });
-//    }
 
     /**
      * @expectedException \Illuminate\Database\Eloquent\ModelNotFoundException
@@ -254,7 +254,7 @@ class StopAlertServiceTest extends TestCase
     {
         $stopAlerts = $this->getValidMock();
         $this->createValidStopAlert();
-        $this->createAnotherValidStopAlert();
+        $this->createValidStopAlert();
 
         $userAlerts = $stopAlerts->forUser($this->user->id);
 

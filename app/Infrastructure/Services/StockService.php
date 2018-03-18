@@ -139,4 +139,9 @@ class StockService
         }
         return true;
     }
+
+    public function byStopAlert($stopAlert)
+    {
+        return $stopAlert->stock;
+    }
 }

@@ -21,6 +21,7 @@ class CreateStopAlertsTable extends Migration
             $table->string('trail_amount_units');
 
             $table->decimal('initial_price', 9, 3);
+            $table->dateTime('purchase_date');
 
             $table->decimal('high_price', 9, 3);
             $table->dateTime('high_price_updated_at');

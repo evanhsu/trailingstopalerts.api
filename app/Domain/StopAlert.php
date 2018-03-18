@@ -44,6 +44,7 @@ class StopAlert extends Model
         'trail_amount',
         'trail_amount_units',
         'initial_price',
+        'purchase_date',
         'high_price',
         'high_price_updated_at',
         'trigger_price',
@@ -56,6 +57,7 @@ class StopAlert extends Model
     protected $dates = [
         'created_at',
         'updated_at',
+        'purchase_date',
         'high_price_updated_at',
     ];
 

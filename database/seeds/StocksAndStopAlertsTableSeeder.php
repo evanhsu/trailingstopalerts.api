@@ -32,6 +32,7 @@ class StocksAndStopAlertsTableSeeder extends Seeder
                         'trail_amount'  => 5,
                         'trail_amount_units'    => 'percent',
                         'initial_price'         => $stock->price * 1.04,
+                        'purchase_date'         => new DateTime(),
                         'high_price'            => $stock->price * 1.08,
                         'high_price_updated_at' => new DateTime(),
                         'trigger_price'         => $stock->price * 1.08 * 0.95,

@@ -5,6 +5,7 @@ namespace App\Infrastructure\Services;
 use App\Domain\StopAlert;
 use App\Domain\User;
 use App\Notifications\UserStopAlertTriggered;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 
@@ -44,17 +45,33 @@ class StopAlertService
     /**
      * @param $attributes
      * @return mixed
-     * @throws \Exception
+     * @throws \Exception|UnprocessableEntityHttpException
      */
     public function create($attributes)
     {
+        if(!isset($attributes['symbol'])) {
+            throw new UnprocessableEntityHttpException('No symbol provided');
+        }
+
+        if(!isset($attributes['initial_price'])) {
+            throw new UnprocessableEntityHttpException('No initial_price provided');
+        }
+
+        if(!isset($attributes['trail_amount'])) {
+            throw new UnprocessableEntityHttpException('No trail_amount provided');
+        }
+
         $stock = $this->stocks->firstOrCreate($attributes['symbol']);
 
-        $attributes['initial_price'] = $stock->price;
-        $attributes['high_price'] = $stock->price;
-        $attributes['high_price_updated_at'] = $stock->quote_updated_at;
+        $defaults = [
+            'purchase_date' => Carbon::today(),
+            'trail_amount_units' => 'percent',
+        ];
 
-        $stopAlert = StopAlert::create($attributes);
+        $attributes['high_price'] = $attributes['initial_price'];
+        $attributes['high_price_updated_at'] = $attributes['purchase_date'];
+
+        $stopAlert = StopAlert::create(array_merge($defaults, $attributes));
         //event(StopAlertCreated, $stopAlert);
 
         return $stopAlert;
@@ -80,11 +97,12 @@ class StopAlertService
     /**
      * @param $stopAlertId
      * @return boolean
+     * @throws \Exception
      */
     public function destroy($stopAlertId)
     {
         $stopAlert = $this->byId($stopAlertId);
-        $stock = $stopAlert->stock;
+        $stock = $this->stocks->byStopAlert($stopAlert);
 
         StopAlert::destroy($stopAlertId);
 //        event(StopAlertDestroyed, $stopAlertId);
@@ -138,6 +156,6 @@ class StopAlertService
             $stopAlert = $this->byIdOrFail($stopAlert);
         }
 
-        return $stopAlert->stock->price - $stopAlert->initial_price;
+        return $stopAlert->stock->close - $stopAlert->initial_price;
     }
 }

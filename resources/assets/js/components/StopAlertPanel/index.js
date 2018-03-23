@@ -1,13 +1,15 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import ImmutablePropTypes from 'react-immutable-proptypes';
 import { withStyles } from 'material-ui/styles';
 import ExpansionPanel, {
     ExpansionPanelDetails,
     ExpansionPanelSummary,
 } from 'material-ui/ExpansionPanel';
 import Typography from 'material-ui/Typography';
-import ExpandMoreIcon from 'material-ui-icons/ExpandMore';
+import EditIcon from 'material-ui-icons/Edit';
 import {Paper} from "material-ui";
+import StopAlertEditForm from '../../containers/StopAlertEditForm';
 
 const styles = theme => ({
     root: {
@@ -48,30 +50,24 @@ function StopAlertPanel(props) {
 
     return (
         <ExpansionPanel expanded={props.expanded} onChange={props.onChange}>
-            <ExpansionPanelSummary className={classes.panelSummary} expandIcon={<ExpandMoreIcon />}>
-                <Typography className={classes.heading}>{props.stopAlert.symbol}</Typography>
+            <ExpansionPanelSummary className={classes.panelSummary} expandIcon={<EditIcon />}>
+                <Typography className={classes.heading}>{props.stopAlert.get('symbol')}</Typography>
                 <Paper elevation={0} className={`${classes.priceGroup} ${classes.highPrice}`}>
-                    <Typography className={classes.secondaryHeading}>High: {props.stopAlert.highPrice}</Typography>
+                    <Typography className={classes.secondaryHeading}>High: {props.stopAlert.get('high_price')}</Typography>
                 </Paper>
                 <Paper elevation={0} className={classes.priceGroup}>
-                    <Typography className={classes.secondaryHeading}>Current: {props.stopAlert.price}</Typography>
-                </Paper>
-                <Paper elevation={0} className={classes.priceGroup}>
-                    <Typography className={classes.secondaryHeading}>Stop: {props.stopAlert.triggerPrice}</Typography>
+                    <Typography className={classes.secondaryHeading}>Stop: {props.stopAlert.get('trigger_price')}</Typography>
                 </Paper>
             </ExpansionPanelSummary>
             <ExpansionPanelDetails>
-                <Typography>
-                    Nulla facilisi. Phasellus sollicitudin nulla et quam mattis feugiat. Aliquam eget
-                    maximus est, id dignissim quam.
-                </Typography>
+              <StopAlertEditForm stopAlert={props.stopAlert} />
             </ExpansionPanelDetails>
         </ExpansionPanel>
     );
 }
 
 StopAlertPanel.propTypes = {
-    stopAlert: PropTypes.object,
+    stopAlert: ImmutablePropTypes.map,
     expanded: PropTypes.bool,
     onChange: PropTypes.func,
     classes: PropTypes.object,

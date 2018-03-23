@@ -1,34 +1,48 @@
-import { fromJS } from 'immutable';
+import { fromJS, Map } from 'immutable';
 import {
-    RECEIVE_STOP_ALERTS_SUCCESS,
-    RECEIVE_STOP_ALERTS_FAILURE,
-    REQUEST_STOP_ALERTS,
+  RECEIVE_STOP_ALERTS_SUCCESS,
+  RECEIVE_STOP_ALERTS_FAILURE,
+  REQUEST_STOP_ALERTS,
 } from './actions';
+import {
+  UPDATE_STOP_ALERT_SUCCESS,
+  UPDATE_STOP_ALERT_FAILURE,
+} from "../StopAlertEditForm/actions";
 
-const initialState = fromJS({
-    selectedId: null,
-    data: [],
-    isLoading: true,
+const initialState = new Map({
+  selectedId: null,
+  data: new Map(),
+  isLoading: true,
 });
 
 /* eslint-disable no-case-declarations */
 function stopAlertsReducer(state = initialState, action) {
-    switch (action.type) {
-        case RECEIVE_STOP_ALERTS_SUCCESS:
-            return state
-                .set('data', action.payload.data)
-                .set('isLoading', false);
+  switch (action.type) {
+    case RECEIVE_STOP_ALERTS_SUCCESS:
+      return state
+        .set('isLoading', false)
+        .set('data', action.payload.get('data').reduce(
+          (lookup, alert) => (
+            lookup.set(alert.get('id'), alert)
+          ), new Map()
+        ));
 
-        case RECEIVE_STOP_ALERTS_FAILURE:
-            return state
-                .set('isLoading', false);
+    case RECEIVE_STOP_ALERTS_FAILURE:
+      return state
+        .set('isLoading', false);
 
-        case REQUEST_STOP_ALERTS:
-            return state.set('isLoading', true);
+    case REQUEST_STOP_ALERTS:
+      return state.set('isLoading', true);
 
-        default:
-            return state;
-    }
+    case UPDATE_STOP_ALERT_SUCCESS:
+      return state.setIn(['data', action.payload.getIn(['data', 'id'])], action.payload.get('data'));
+
+    case UPDATE_STOP_ALERT_FAILURE:
+      return state;
+
+    default:
+      return state;
+  }
 }
 
 export default stopAlertsReducer;

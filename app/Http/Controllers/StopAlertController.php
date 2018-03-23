@@ -68,6 +68,7 @@ class StopAlertController extends Controller
     /**
      * @param $stopAlertId
      * @return \Illuminate\Contracts\Routing\ResponseFactory|\Symfony\Component\HttpFoundation\Response
+     * @throws \Exception
      */
     public function destroy($stopAlertId) {
         $this->stopAlerts->destroy($stopAlertId);

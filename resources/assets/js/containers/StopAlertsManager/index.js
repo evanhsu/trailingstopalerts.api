@@ -22,7 +22,8 @@ class StopAlertsManager extends React.Component {
 
 StopAlertsManager.propTypes = {
   loading: PropTypes.bool,
-  stopAlerts: ImmutablePropTypes.list,
+  stopAlerts: ImmutablePropTypes.map,
+  token: PropTypes.string,
 };
 
 const mapStateToProps = (state) => {

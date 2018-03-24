@@ -40,6 +40,15 @@ class Accordion extends React.Component {
     const { classes } = this.props;
     const { expanded } = this.state;
 
+    const stopAlertAccordion = this.props.stopAlerts.valueSeq().map((stopAlert) => (
+      <StopAlertPanel
+        key={stopAlert.get('id').toString()}
+        stopAlert={stopAlert}
+        expanded={expanded === stopAlert.get('symbol')}
+        onChange={this.handleChange(stopAlert.get('symbol'))}
+      />
+    ));
+
     return (
       <div className={classes.root}>
         <div className={classes.heading}>
@@ -49,14 +58,7 @@ class Accordion extends React.Component {
           </Button>
         </div>
         <div className={classes.accordionRoot}>
-          {(this.props.stopAlerts.size > 0) && this.props.stopAlerts.map((stopAlert) => (
-            <StopAlertPanel
-              key={stopAlert.get('id').toString()}
-              stopAlert={stopAlert}
-              expanded={expanded === stopAlert.get('symbol')}
-              onChange={this.handleChange(stopAlert.get('symbol'))}
-            />
-          ))}
+          {stopAlertAccordion}
         </div>
       </div>
     );

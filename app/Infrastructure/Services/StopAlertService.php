@@ -61,6 +61,10 @@ class StopAlertService
             throw new UnprocessableEntityHttpException('No trail_amount provided');
         }
 
+        if(!isset($attributes['purchase_date'])) {
+            throw new UnprocessableEntityHttpException('No purchase_date provided');
+        }
+
         $stock = $this->stocks->firstOrCreate($attributes['symbol']);
 
         $defaults = [

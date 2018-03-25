@@ -32,15 +32,12 @@ const styles = theme => ({
         paddingRight: 10,
     },
     highPrice: {
-        backgroundColor: '#31c632',
-    },
-    currentPrice: {
-        backgroundColor: '#777777',
+        // backgroundColor: '#c63132',
     },
     panelSummary: {
         minHeight: 100,
     },
-    triggerPrice: {
+    triggerLabel: {
         backgroundColor: '#c63132',
     },
 });
@@ -48,11 +45,24 @@ const styles = theme => ({
 function StopAlertPanel(props) {
     const { classes } = props;
 
+    const TriggerLabel = () => {
+      if(props.stopAlert.triggered) {
+        return (
+          <Paper elevation={0} className={`${classes.priceGroup}`}>
+            <Typography className={`${classes.secondaryHeading} ${classes.triggerLabel}`}>Triggered!</Typography>
+          </Paper>
+        );
+      }
+
+      return null;
+    };
+
     return (
         <ExpansionPanel expanded={props.expanded} onChange={props.onChange}>
             <ExpansionPanelSummary className={classes.panelSummary} expandIcon={<EditIcon />}>
                 <Typography className={classes.heading}>{props.stopAlert.get('symbol')}</Typography>
-                <Paper elevation={0} className={`${classes.priceGroup} ${classes.highPrice}`}>
+                <TriggerLabel/>
+                <Paper elevation={0} className={`${classes.priceGroup}`}>
                     <Typography className={classes.secondaryHeading}>High: ${props.stopAlert.get('high_price')}</Typography>
                 </Paper>
                 <Paper elevation={0} className={classes.priceGroup}>

@@ -107,7 +107,7 @@ class AlphaVantage
         $response = $this->client->request('GET', '', [
             'query' => [
                 'function' => $function,
-                'symbols' => $symbol,
+                'symbol' => $symbol,
                 'datatype' => 'json',
                 'output_size' => $outputSize,
                 'apikey' => $this->apiKey,
@@ -121,7 +121,7 @@ class AlphaVantage
         $body = json_decode($response->getBody());
 
         if(property_exists($body, "Error Message")) {
-            return null;
+            throw new \Exception($body->{'Error Message'});
         }
 
         $timezone = $body->{'Meta Data'}->{'5. Time Zone'};

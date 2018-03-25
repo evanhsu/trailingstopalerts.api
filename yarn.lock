@@ -5299,9 +5299,9 @@ klaw@^1.0.0:
   optionalDependencies:
     graceful-fs "^4.1.9"
 
-laravel-mix@^2.1:
-  version "2.1.1"
-  resolved "https://registry.yarnpkg.com/laravel-mix/-/laravel-mix-2.1.1.tgz#5bcdcd3c4afef9e810802d027bdac938b57e29e9"
+laravel-mix@^2.1.11:
+  version "2.1.11"
+  resolved "https://registry.yarnpkg.com/laravel-mix/-/laravel-mix-2.1.11.tgz#3741bde214586f8c171641990c9a487eece5367d"
   dependencies:
     autoprefixer "^7.2.6"
     babel-core "^6.24.1"

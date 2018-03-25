@@ -97,6 +97,11 @@ class StopAlert extends Model
         return $this->belongsTo(Stock::class, 'symbol', 'symbol');
     }
 
+    public function setSymbolAttribute($value)
+    {
+        $this->attributes['symbol'] = strtoupper($value);
+    }
+
     public function setInitialPriceAttribute($value)
     {
         $this->attributes['initial_price'] = (float)$value;

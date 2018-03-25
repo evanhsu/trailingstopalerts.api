@@ -3,6 +3,8 @@ import {
   REQUEST_AUTHENTICATION,
   AUTHENTICATION_SUCCESS,
   AUTHENTICATION_FAILURE,
+  SET_TOKEN,
+  LOGOUT,
 } from './actions';
 
 const initialState = fromJS({
@@ -26,7 +28,16 @@ function authReducer(state = initialState, action) {
         .set('isLoading', false);
 
     case REQUEST_AUTHENTICATION:
-      return state.set('isLoading', true);
+      return state
+        .set('isLoading', true);
+
+    case SET_TOKEN:
+      return state
+        .set('token', action.payload)
+        .set('isLoggedIn', true);
+
+    case LOGOUT:
+      return initialState;
 
     default:
       return state;

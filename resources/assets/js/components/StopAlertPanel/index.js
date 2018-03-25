@@ -53,10 +53,10 @@ function StopAlertPanel(props) {
             <ExpansionPanelSummary className={classes.panelSummary} expandIcon={<EditIcon />}>
                 <Typography className={classes.heading}>{props.stopAlert.get('symbol')}</Typography>
                 <Paper elevation={0} className={`${classes.priceGroup} ${classes.highPrice}`}>
-                    <Typography className={classes.secondaryHeading}>High: {props.stopAlert.get('high_price')}</Typography>
+                    <Typography className={classes.secondaryHeading}>High: ${props.stopAlert.get('high_price')}</Typography>
                 </Paper>
                 <Paper elevation={0} className={classes.priceGroup}>
-                    <Typography className={classes.secondaryHeading}>Stop: {props.stopAlert.get('trigger_price')}</Typography>
+                    <Typography className={classes.secondaryHeading}>Stop: ${props.stopAlert.get('trigger_price')}</Typography>
                 </Paper>
             </ExpansionPanelSummary>
             <ExpansionPanelDetails>

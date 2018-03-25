@@ -7,6 +7,7 @@ import { Map } from 'immutable';
 import { Typography } from "material-ui";
 import { withStyles } from 'material-ui/styles';
 import StopAlertPanel from '../StopAlertPanel';
+import StopAlertCreateForm from '../../containers/StopAlertCreateForm';
 
 const styles = theme => ({
   root: {},
@@ -23,29 +24,45 @@ const styles = theme => ({
     fontSize: 40,
     paddingRight: 10,
   },
+  newAlertForm: {
+
+  },
 });
 
 class Accordion extends React.Component {
   state = {
-    expanded: null,
+    expandedPanel: null,
+    newAlertFormIsVisible: false,
   };
 
-  handleChange = panel => (event, expanded) => {
+  handlePanelClick = panel => (event, expanded) => {
     this.setState({
-      expanded: expanded ? panel : false,
+      expandedPanel: expanded ? panel : false,
+    });
+  };
+
+  openNewAlertForm = () => {
+    this.setState({
+      newAlertFormIsVisible: true,
+    });
+  };
+
+  closeNewAlertForm = () => {
+    this.setState({
+      newAlertFormIsVisible: false,
     });
   };
 
   render() {
     const { classes } = this.props;
-    const { expanded } = this.state;
+    const { expandedPanel } = this.state;
 
-    const stopAlertAccordion = this.props.stopAlerts.valueSeq().map((stopAlert) => (
+    const stopAlerts = this.props.stopAlerts.valueSeq().map((stopAlert) => (
       <StopAlertPanel
         key={stopAlert.get('id').toString()}
         stopAlert={stopAlert}
-        expanded={expanded === stopAlert.get('symbol')}
-        onChange={this.handleChange(stopAlert.get('symbol'))}
+        expanded={expandedPanel === stopAlert.get('symbol')}
+        onChange={this.handlePanelClick(stopAlert.get('symbol'))}
       />
     ));
 
@@ -53,12 +70,13 @@ class Accordion extends React.Component {
       <div className={classes.root}>
         <div className={classes.heading}>
           <Typography className={classes.headingText}>Alerts</Typography>
-          <Button mini variant="fab" color="secondary" aria-label="add" className={classes.button}>
+          <Button mini variant="fab" color="secondary" aria-label="add" className={classes.button} onClick={this.openNewAlertForm}>
             <AddIcon />
           </Button>
         </div>
+        { this.state.newAlertFormIsVisible ? (<div className={classes.newAlertForm}><StopAlertCreateForm onRequestClose={this.closeNewAlertForm}/></div>) : null }
         <div className={classes.accordionRoot}>
-          {stopAlertAccordion}
+          {stopAlerts}
         </div>
       </div>
     );

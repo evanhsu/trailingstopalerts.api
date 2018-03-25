@@ -5,10 +5,16 @@ import { connect } from 'react-redux';
 import { withStyles } from 'material-ui/styles';
 import {Paper, TextField, Button} from "material-ui";
 import { updateStopAlert } from "./actions";
+import { destroyStopAlert} from "../StopAlertsManager/actions";
 
 const styles = theme => ({
   button: {
     margin: 10,
+  },
+  deleteButton: {
+    margin: 10,
+    alignSelf: 'flex-end',
+    justifySelf: 'flex-end',
   },
   form: {
     //
@@ -54,13 +60,20 @@ const DateField = (props) => (
       shrink: true,
     }}
     className={props.className}
-    defaultValue={props.value}
+    onChange={props.onChange}
+    value={props.value}
   />
 );
 
 const SubmitButton = (props) => (
   <Button variant="raised" className={props.className} onClick={props.onClick}>
     Save
+  </Button>
+);
+
+const DeleteButton = (props) => (
+  <Button variant="raised" {...props}>
+    Delete
   </Button>
 );
 
@@ -90,6 +103,10 @@ class StopAlertEditForm extends React.Component {
     );
   };
 
+  handleDeleteStopAlert = (id) => () => {
+    this.props.destroyStopAlert(id, this.props.token);
+  };
+
   render() {
     return (
       <Paper className={this.classes.root}>
@@ -101,6 +118,7 @@ class StopAlertEditForm extends React.Component {
           <DateField onChange={this.handleChange('purchase_date')} className={this.classes.dateField}
                      value={this.state.purchase_date} />
           <SubmitButton onClick={this.handleSubmit} className={this.classes.button} />
+          <DeleteButton onClick={this.handleDeleteStopAlert(this.state.id)} className={this.classes.deleteButton} />
         </form>
       </Paper>
     );
@@ -122,6 +140,7 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
   return {
     updateStopAlert: (id, trailAmount, initialPrice, purchaseDate, token) => dispatch(updateStopAlert(id, trailAmount, initialPrice, purchaseDate, token)),
+    destroyStopAlert: (id, token) => dispatch(destroyStopAlert(id, token)),
   };
 };
 

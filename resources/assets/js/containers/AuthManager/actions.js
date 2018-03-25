@@ -52,3 +52,14 @@ export const authenticationFailure = (error) => ({
   type: AUTHENTICATION_FAILURE,
   error,
 });
+
+export const SET_TOKEN = 'SET_TOKEN';
+export const setToken = (token) => ({
+  type: SET_TOKEN,
+  payload: token,
+});
+
+export const LOGOUT = 'LOGOUT';
+export const logout = () => ({
+  type: LOGOUT,
+});

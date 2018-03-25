@@ -30,18 +30,23 @@ class StopAlertController extends Controller
 
     /**
      * @param Request $request
-     * @return StopAlertResource
+     * @return \Illuminate\Http\JsonResponse
      * @throws \Exception
      */
     public function store(Request $request)
     {
         $this->validate($request, [
             'symbol' => 'required',
+            'trail_amount' => 'required',
+            'initial_price' => 'required',
+            'purchase_date' => 'required',
         ]);
 
         $stopAlert = $this->stopAlerts->create($request->merge(['user_id' => Auth::user()->id])->all());
 
-        return response(new StopAlertResource($stopAlert), 201);
+        return (new StopAlertResource($stopAlert))
+            ->response()
+            ->setStatusCode(201);
     }
 
     /**

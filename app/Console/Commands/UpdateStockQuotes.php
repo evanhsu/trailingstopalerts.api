@@ -49,15 +49,11 @@ class UpdateStockQuotes extends Command
      */
     public function handle(StockService $stocks)
     {
-        // DONE: Change to use the TIME_SERIES_DAILY endpoint.
-        // TODO: Check DAILY_HIGH for a new high. Check DAILY_CLOSE vs trigger_price.
-        // TODO: Limit AlphaVantage API calls to 1 call per second
-
         Log::info('Running UpdateStockQuotes command...');
         $startTime = microtime(true);
 
         Stock::each(function($stock) use ($stocks) {
-            $stocks->update($stock->symbol, $this->client->dailyQuote($stock->pluck('symbol'))->toArray());
+            $stocks->update($stock->symbol, $this->client->dailyQuote($stock->symbol)->toArray());
             sleep(1);
         });
 

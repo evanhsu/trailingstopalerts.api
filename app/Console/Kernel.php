@@ -25,7 +25,7 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-//         $schedule->command('quotes:update')->twiceDaily(9, 17);
+//         $schedule->command('quotes:update')->dailyAt('2:00');
     }
 
     /**

@@ -7,6 +7,7 @@ use App\Domain\User;
 use App\Notifications\UserStopAlertTriggered;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 
 class StopAlertService
@@ -72,8 +73,14 @@ class StopAlertService
             'trail_amount_units' => 'percent',
         ];
 
-        $attributes['high_price'] = $attributes['initial_price'];
-        $attributes['high_price_updated_at'] = $attributes['purchase_date'];
+        // TODO: Set 'high_price' to the HIGHEST price between 'purchase_date' and 'today'
+        if($attributes['initial_price'] > $stock->high) {
+            $attributes['high_price'] = $attributes['initial_price'];
+            $attributes['high_price_updated_at'] = $attributes['purchase_date'];
+        } else {
+            $attributes['high_price'] = $stock->high;
+            $attributes['high_price_updated_at'] = $stock->quote_updated_at;
+        }
 
         $stopAlert = StopAlert::create(array_merge($defaults, $attributes));
         //event(StopAlertCreated, $stopAlert);
@@ -113,7 +120,7 @@ class StopAlertService
 
         // Destroy the Stock as well, if there are no more StopAlerts using it.
         if ($stock->stopAlerts()->count() === 0) {
-            $this->stocks->destroy($stock->id);
+            $this->stocks->destroy($stock->symbol);
         }
 
         return true;
@@ -143,11 +150,15 @@ class StopAlertService
             $id = $stopAlert;
         }
 
-        $stopAlert = $this->update($id, [
-            'triggered' => true,
-        ]);
+        // Don't send multiple notifications
+        if(!$stopAlert->triggered) {
+            $stopAlert = $this->update($id, [
+                'triggered' => true,
+            ]);
 
-        $stopAlert->user->notify(new UserStopAlertTriggered($stopAlert));
+            $stopAlert->user->notify(new UserStopAlertTriggered($stopAlert));
+        }
+
         return $stopAlert;
     }
 

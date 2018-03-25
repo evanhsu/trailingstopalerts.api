@@ -7,6 +7,7 @@ use App\Domain\StockQuote;
 use Carbon\Carbon;
 use GuzzleHttp\Client;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 
 class AlphaVantage
 {

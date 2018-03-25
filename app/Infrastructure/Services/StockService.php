@@ -5,6 +5,7 @@ namespace App\Infrastructure\Services;
 use App\Domain\Stock;
 use App\Events\StockUpdated;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 
 class StockService
@@ -70,7 +71,6 @@ class StockService
     public function update(string $symbol, array $attributes)
     {
         $stock = $this->bySymbolOrFail($symbol);
-
         if ($stock->update($attributes)) {
             event(new StockUpdated($stock));
             return $stock;

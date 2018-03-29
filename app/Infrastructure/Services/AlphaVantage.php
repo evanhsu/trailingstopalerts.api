@@ -125,7 +125,7 @@ class AlphaVantage
         }
 
         $timezone = $body->{'Meta Data'}->{'5. Time Zone'};
-        $mostRecentQuoteDate = $body->{'Meta Data'}->{'3. Last Refreshed'};
+        $mostRecentQuoteDate = explode(' ', $body->{'Meta Data'}->{'3. Last Refreshed'})[0]; // Take the DATE portion of '2018-03-29 12:03:59'
         $mostRecentQuote = $body->{'Time Series (Daily)'}->{$mostRecentQuoteDate};
 
         $stock = new Stock([

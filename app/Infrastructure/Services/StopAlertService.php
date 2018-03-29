@@ -156,6 +156,7 @@ class StopAlertService
                 'triggered' => true,
             ]);
 
+            Log::info('Sending alert to User: '.$stopAlert->user->email.' because stock '.$stopAlert->symbol.' was triggered');
             $stopAlert->user->notify(new UserStopAlertTriggered($stopAlert));
         }
 

@@ -50,7 +50,7 @@ class UserStopAlertTriggered extends Notification // implements ShouldQueue
         $symbol = $this->stopAlert->symbol;
         $initialPrice = $this->stopAlert->initial_price;
         $initialPriceDate = $this->stopAlert->created_at->toFormattedDateString();
-        $price = $this->stopAlert->stock->price;
+        $price = $this->stopAlert->stock->close;
         $trailString = ($this->stopAlert->trail_amount_units == 'dollars' ? '$' : '') . $this->stopAlert->trail_amount . ($this->stopAlert->trail_amount_units == 'percent' ? '%' : '');
         $highPrice = $this->stopAlert->high_price;
         $highPriceDate = $this->stopAlert->high_price_updated_at->toFormattedDateString();
@@ -80,7 +80,7 @@ class UserStopAlertTriggered extends Notification // implements ShouldQueue
         return [
             'id' => $this->stopAlert->id,
             'symbol' => $this->stopAlert->symbol,
-            'price' => $this->stopAlert->stock->price,
+            'price' => $this->stopAlert->stock->close,
             'high_price' => $this->stopAlert->high_price,
             'high_price_updated_at' => $this->stopAlert->high_price_updated_at->toIso8601String(),
             'trail_amount' => $this->stopAlert->trail_amount,
